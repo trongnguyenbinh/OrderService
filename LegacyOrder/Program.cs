@@ -1,9 +1,25 @@
 using Scalar.AspNetCore;
+using LegacyOrder.ModuleRegistrations;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddControllers();
-builder.Services.AddEndpointsApiExplorer();
+// Configure Serilog
+builder.AddSerilogLogging(builder.Configuration);
+
+var service = builder.Services;
+
+service.AddControllers();
+service.AddEndpointsApiExplorer();
+
+builder.Configuration.LoadSecretsFromVault();
+
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+if (string.IsNullOrWhiteSpace(connectionString))
+{
+    throw new Exception("Connection string is not configured.");
+}
+
+service.AddRepositoryCollection(connectionString);
 
 var app = builder.Build();
 
