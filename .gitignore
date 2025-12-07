@@ -477,3 +477,15 @@ $RECYCLE.BIN/
 
 # Vim temporary swap files
 *.swp
+
+##
+## Project-specific exclusions
+##
+
+# Entity Framework Core Migrations
+# Migrations are generated code and should not be tracked in version control
+Domain/Migrations/
+
+# Development-specific configuration
+# Contains local development settings and should not be tracked
+LegacyOrder/appsettings.Development.json
