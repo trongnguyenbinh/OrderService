@@ -30,6 +30,9 @@ services.AddSwaggerGen();
 
 var app = builder.Build();
 
+// Register global exception handling middleware (should be early in the pipeline)
+app.UseGlobalExceptionHandling();
+
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger(options =>

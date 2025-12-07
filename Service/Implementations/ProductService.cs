@@ -165,7 +165,6 @@ public class ProductService : IProductService
 
         // Validate pagination parameters
         ValidateSearchRequest(request);
-
         var pagedResult = await _productRepository.SearchAsync(request, cancellationToken);
 
         return new PagedResult<ProductDto>
