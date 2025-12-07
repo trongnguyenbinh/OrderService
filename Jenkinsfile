@@ -4,8 +4,9 @@ pipeline {
     }
     
     environment {
-        DOCKER_IMAGE = 'your-registry/legacy-order-service'
+        DOCKER_IMAGE = 'legacy-order-service'
         IMAGE_TAG = "${BUILD_NUMBER}"
+        EXPOSE_PORT = 6868
     }
     
     stages {
@@ -33,7 +34,7 @@ pipeline {
                             # Run new container with Vault token
                             docker run -d \
                                 --name legacy-order-service \
-                                -p 8080:8080 \
+                                -p ${EXPOSE_PORT}:8080 \
                                 -e VAULT__TOKEN=${VAULT_TOKEN} \
                                 -e ASPNETCORE_ENVIRONMENT=Production \
                                 -e TZ=Asia/Bangkok \
