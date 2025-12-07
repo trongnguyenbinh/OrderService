@@ -12,13 +12,15 @@ services.AddEndpointsApiExplorer();
 
 builder.Configuration.LoadSecretsFromVault();
 
-var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+var connectionString = builder.Configuration.GetConnectionString("Default");
 if (string.IsNullOrWhiteSpace(connectionString))
 {
     throw new Exception("Connection string is not configured.");
 }
 
 services.AddRepositoryCollection(connectionString);
+services.AddServiceCollection();
+services.AddAutoMapper(typeof(Program));
 
 #region Swagger/OpenAPI Configuration
 
@@ -27,6 +29,9 @@ services.AddSwaggerGen();
 #endregion
 
 var app = builder.Build();
+
+// Register global exception handling middleware (should be early in the pipeline)
+app.UseGlobalExceptionHandling();
 
 if (app.Environment.IsDevelopment())
 {

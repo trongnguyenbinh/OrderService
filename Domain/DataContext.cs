@@ -14,8 +14,19 @@ public class DataContext : DbContext
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
+
         modelBuilder.Entity<OrderEntity>().ToTable("orders").HasKey(x => x.Id);
-        modelBuilder.Entity<ProductEntity>().ToTable("products").HasKey(x => x.Id);
+
+        modelBuilder.Entity<ProductEntity>(entity =>
+        {
+            entity.ToTable("products");
+            entity.HasKey(x => x.Id);
+            entity.HasIndex(x => x.SKU).IsUnique();
+            entity.Property(x => x.Name).IsRequired().HasMaxLength(200);
+            entity.Property(x => x.SKU).IsRequired().HasMaxLength(100);
+            entity.Property(x => x.Price).HasPrecision(18, 2);
+            entity.Property(x => x.Category).HasMaxLength(100);
+        });
     }
 
     public DbConnection GetDbConnection()
