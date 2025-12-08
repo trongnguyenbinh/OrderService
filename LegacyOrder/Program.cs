@@ -33,20 +33,18 @@ var app = builder.Build();
 // Register global exception handling middleware (should be early in the pipeline)
 app.UseGlobalExceptionHandling();
 
-if (app.Environment.IsDevelopment())
+app.UseSwagger(options =>
 {
-    app.UseSwagger(options =>
-    {
-        options.RouteTemplate = "openapi/{documentName}.json";
-    });
+    options.RouteTemplate = "openapi/{documentName}.json";
+});
 
-    app.MapScalarApiReference(options =>
-    {
-        options.WithTitle("LegacyOrder API")
-               .WithTheme(ScalarTheme.Purple)
-               .WithDefaultHttpClient(ScalarTarget.CSharp, ScalarClient.HttpClient);
-    });
-}
+app.MapScalarApiReference(options =>
+{
+    options.WithTitle("LegacyOrder API")
+           .WithTheme(ScalarTheme.Purple)
+           .WithDefaultHttpClient(ScalarTarget.CSharp, ScalarClient.HttpClient);
+});
+
 
 app.UseAuthorization();
 

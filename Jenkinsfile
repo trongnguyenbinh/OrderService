@@ -36,7 +36,6 @@ pipeline {
                                 --name legacy-order-service \
                                 -p ${EXPOSE_PORT}:8080 \
                                 -e VAULT__TOKEN=${VAULT_TOKEN} \
-                                -e ASPNETCORE_ENVIRONMENT=Production \
                                 -e TZ=Asia/Bangkok \
                                 --restart unless-stopped \
                                 ${DOCKER_IMAGE}:${IMAGE_TAG}
