@@ -272,5 +272,29 @@ public class CustomerRepository : ICustomerRepository
             _ => query.OrderByDescending(c => c.CreatedAt)
         };
     }
+
+    public async Task<IEnumerable<OrderEntity>> GetCustomerOrdersAsync(Guid customerId, CancellationToken cancellationToken = default)
+    {
+        _logger.LogInformation("Getting orders for customer: {CustomerId}", customerId);
+
+        try
+        {
+            var orders = await _context.Orders
+                .AsNoTracking()
+                .Include(o => o.OrderItems)
+                    .ThenInclude(oi => oi.Product)
+                .Where(o => o.CustomerId == customerId)
+                .OrderByDescending(o => o.OrderDate)
+                .ToListAsync(cancellationToken);
+
+            _logger.LogInformation("Retrieved {Count} orders for customer: {CustomerId}", orders.Count, customerId);
+            return orders;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error getting orders for customer: {CustomerId}", customerId);
+            throw;
+        }
+    }
 }
 

@@ -9,5 +9,6 @@ public interface ICustomerRepository : IRepository<CustomerEntity, Guid>
 {
     Task<CustomerEntity?> GetByEmailAsync(string email, CancellationToken cancellationToken = default);
     Task<PagedResult<CustomerEntity>> SearchAsync(CustomerSearchRequest request, CancellationToken cancellationToken = default);
+    Task<IEnumerable<OrderEntity>> GetCustomerOrdersAsync(Guid customerId, CancellationToken cancellationToken = default);
 }
 

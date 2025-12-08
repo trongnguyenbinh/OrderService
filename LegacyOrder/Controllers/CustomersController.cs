@@ -114,5 +114,30 @@ public class CustomersController : ControllerBase
         return NoContent();
     }
 
+    /// <summary>
+    /// Get customer order history
+    /// </summary>
+    [HttpGet("{id}/orders")]
+    [ProducesResponseType(typeof(IEnumerable<OrderDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> GetCustomerOrders(Guid id, CancellationToken cancellationToken)
+    {
+        _logger.LogInformation("API: Getting order history for customer: {CustomerId}", id);
+
+        // First check if customer exists
+        var customer = await _customerService.GetByIdAsync(id, cancellationToken);
+        if (customer == null)
+        {
+            _logger.LogWarning("API: Customer not found with ID: {CustomerId}", id);
+            return NotFound(new { error = $"Customer with ID {id} not found" });
+        }
+
+        var orders = await _customerService.GetCustomerOrdersAsync(id, cancellationToken);
+
+        _logger.LogInformation("API: Successfully retrieved {Count} orders for customer: {CustomerId}",
+            orders.Count(), id);
+        return Ok(orders);
+    }
+
 }
 
