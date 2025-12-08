@@ -49,9 +49,8 @@ pipeline {
         stage('Health Check') {
             steps {
                 script {
-                    // Wait for container to be healthy
                     sh """
-                        timeout 60 bash -c 'until docker exec legacy-order-service wget --no-verbose --tries=1 --spider http://localhost:8080/api/health 2>&1 | grep -q "200 OK\\|HTTP"; do sleep 2; done'
+                        timeout 60 bash -c 'until [ "\$(docker inspect -f {{.State.Health.Status}} legacy-order-service)" = "healthy" ]; do sleep 2; done'
                         echo "Service is healthy!"
                     """
                 }
