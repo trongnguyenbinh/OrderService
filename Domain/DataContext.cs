@@ -27,6 +27,18 @@ public class DataContext : DbContext
             entity.Property(x => x.Price).HasPrecision(18, 2);
             entity.Property(x => x.Category).HasMaxLength(100);
         });
+
+        modelBuilder.Entity<CustomerEntity>(entity =>
+        {
+            entity.ToTable("customers");
+            entity.HasKey(x => x.Id);
+            entity.HasIndex(x => x.Email).IsUnique();
+            entity.Property(x => x.FirstName).IsRequired().HasMaxLength(100);
+            entity.Property(x => x.LastName).IsRequired().HasMaxLength(100);
+            entity.Property(x => x.Email).IsRequired().HasMaxLength(255);
+            entity.Property(x => x.PhoneNumber).HasMaxLength(20);
+            entity.Property(x => x.CustomerType).IsRequired();
+        });
     }
 
     public DbConnection GetDbConnection()
@@ -41,4 +53,5 @@ public class DataContext : DbContext
 
     public DbSet<OrderEntity> Orders {get; set; }
     public DbSet<ProductEntity> Products { get; set; }
+    public DbSet<CustomerEntity> Customers { get; set; }
 }

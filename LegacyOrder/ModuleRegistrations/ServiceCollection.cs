@@ -11,9 +11,11 @@ public static class ServiceCollection
     {
         // Register Repositories
         services.AddScoped<IProductRepository, ProductRepository>();
+        services.AddScoped<ICustomerRepository, CustomerRepository>();
 
         // Register Services
         services.AddScoped<IProductService, ProductService>();
+        services.AddScoped<ICustomerService, CustomerService>();
 
         return services;
     }
