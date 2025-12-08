@@ -34,7 +34,7 @@ pipeline {
                             # Run new container with Vault token
                             docker run -d \
                                 --name legacy-order-service \
-                                -p ${EXPOSE_PORT}:8080 \
+                                -p 127.0.0.1:${EXPOSE_PORT}:8080 \
                                 -e VAULT__TOKEN=${VAULT_TOKEN} \
                                 -e TZ=Asia/Bangkok \
                                 --restart unless-stopped \
