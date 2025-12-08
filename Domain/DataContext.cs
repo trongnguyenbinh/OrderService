@@ -15,8 +15,6 @@ public class DataContext : DbContext
     {
         base.OnModelCreating(modelBuilder);
 
-        modelBuilder.Entity<OrderEntity>().ToTable("orders").HasKey(x => x.Id);
-
         modelBuilder.Entity<ProductEntity>(entity =>
         {
             entity.ToTable("products");
@@ -39,6 +37,44 @@ public class DataContext : DbContext
             entity.Property(x => x.PhoneNumber).HasMaxLength(20);
             entity.Property(x => x.CustomerType).IsRequired();
         });
+
+        modelBuilder.Entity<OrderEntity>(entity =>
+        {
+            entity.ToTable("orders");
+            entity.HasKey(x => x.Id);
+            entity.HasIndex(x => x.OrderNumber).IsUnique();
+            entity.Property(x => x.OrderNumber).IsRequired().HasMaxLength(50);
+            entity.Property(x => x.SubTotal).HasPrecision(18, 2);
+            entity.Property(x => x.DiscountAmount).HasPrecision(18, 2);
+            entity.Property(x => x.TotalAmount).HasPrecision(18, 2);
+            entity.Property(x => x.OrderStatus).IsRequired();
+
+            // Relationship with Customer
+            entity.HasOne(x => x.Customer)
+                .WithMany()
+                .HasForeignKey(x => x.CustomerId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // Relationship with OrderItems
+            entity.HasMany(x => x.OrderItems)
+                .WithOne(x => x.Order)
+                .HasForeignKey(x => x.OrderId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<OrderItemEntity>(entity =>
+        {
+            entity.ToTable("order_items");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.UnitPrice).HasPrecision(18, 2);
+            entity.Property(x => x.LineTotal).HasPrecision(18, 2);
+
+            // Relationship with Product
+            entity.HasOne(x => x.Product)
+                .WithMany()
+                .HasForeignKey(x => x.ProductId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
     }
 
     public DbConnection GetDbConnection()
@@ -51,7 +87,8 @@ public class DataContext : DbContext
         return base.Set<TEntity>();
     }
 
-    public DbSet<OrderEntity> Orders {get; set; }
+    public DbSet<OrderEntity> Orders { get; set; }
+    public DbSet<OrderItemEntity> OrderItems { get; set; }
     public DbSet<ProductEntity> Products { get; set; }
     public DbSet<CustomerEntity> Customers { get; set; }
 }

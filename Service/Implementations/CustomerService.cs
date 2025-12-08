@@ -318,4 +318,13 @@ public class CustomerService : ICustomerService
             return false;
         }
     }
+
+    public async Task<IEnumerable<OrderDto>> GetCustomerOrdersAsync(Guid customerId, CancellationToken cancellationToken = default)
+    {
+        _logger.LogInformation("Service: Getting orders for customer: {CustomerId}", customerId);
+
+        var orders = await _customerRepository.GetCustomerOrdersAsync(customerId, cancellationToken);
+
+        return _mapper.Map<IEnumerable<OrderDto>>(orders);
+    }
 }

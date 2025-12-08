@@ -12,5 +12,6 @@ public interface ICustomerService
     Task<bool> DeleteAsync(Guid id, CancellationToken cancellationToken = default);
     Task<CustomerDto?> GetByEmailAsync(string email, CancellationToken cancellationToken = default);
     Task<PagedResult<CustomerDto>> SearchAsync(CustomerSearchRequest request, CancellationToken cancellationToken = default);
+    Task<IEnumerable<OrderDto>> GetCustomerOrdersAsync(Guid customerId, CancellationToken cancellationToken = default);
 }
 

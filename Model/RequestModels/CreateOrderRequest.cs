@@ -1,8 +1,8 @@
 namespace Model.RequestModels;
 
-public record CreateOrderRequest(
-    string CustomerName,
-    string ProductName,
-    int Quantity,
-    double Price);
+public class CreateOrderRequest
+{
+    public Guid CustomerId { get; set; }
+    public List<OrderItemRequest> OrderItems { get; set; } = new();
+}
 

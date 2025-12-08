@@ -264,5 +264,49 @@ public class ProductRepository : IProductRepository
             _ => query.OrderByDescending(p => p.CreatedAt)
         };
     }
+
+    public async Task<Dictionary<Guid, ProductEntity>> GetByIdsAsync(IEnumerable<Guid> productIds, CancellationToken cancellationToken = default)
+    {
+        var productIdList = productIds.ToList();
+        _logger.LogInformation("Getting {Count} products by IDs in bulk", productIdList.Count);
+
+        try
+        {
+            var products = await _context.Products
+                .Where(p => productIdList.Contains(p.Id))
+                .ToListAsync(cancellationToken);
+
+            var productDictionary = products.ToDictionary(p => p.Id);
+
+            _logger.LogInformation("Retrieved {Count} products out of {RequestedCount} requested",
+                productDictionary.Count, productIdList.Count);
+
+            return productDictionary;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error getting products by IDs in bulk");
+            throw;
+        }
+    }
+
+    public async Task UpdateRangeAsync(IEnumerable<ProductEntity> products, CancellationToken cancellationToken = default)
+    {
+        var productList = products.ToList();
+        _logger.LogInformation("Updating {Count} products in bulk", productList.Count);
+
+        try
+        {
+            _context.Products.UpdateRange(productList);
+            await _context.SaveChangesAsync(cancellationToken);
+
+            _logger.LogInformation("Successfully updated {Count} products in bulk", productList.Count);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error updating products in bulk");
+            throw;
+        }
+    }
 }
 
