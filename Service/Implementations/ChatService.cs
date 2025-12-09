@@ -355,7 +355,7 @@ public class ChatService : IChatService
             PageSize = maxResults
         };
 
-        var products = await _productRepository.SearchAsync(searchRequest, cancellationToken);
+        var products = await _productRepository.SearchForAIToolAsync(searchRequest, cancellationToken);
 
         var result = new
         {
