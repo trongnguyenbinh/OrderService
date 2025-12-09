@@ -175,6 +175,65 @@ public class ProductRepository : IProductRepository
         }
     }
 
+    public async Task<PagedResult<ProductEntity>> SearchForAIToolAsync(ProductSearchRequest request, CancellationToken cancellationToken = default)
+    {
+        _logger.LogInformation(
+            "Searching products for AI tool - Name: {Name}, Description: {Description}, SKU: {SKU}, Category: {Category}, Page: {PageNumber}, PageSize: {PageSize}",
+            request.Name, request.Description, request.SKU, request.Category, request.PageNumber, request.PageSize);
+
+        try
+        {
+            // Start with base query - filter by IsActive = true
+            var query = _context.Products
+                .AsNoTracking()
+                .Where(p => p.IsActive == true);
+
+            var hasNameFilter = !string.IsNullOrWhiteSpace(request.Name);
+            var hasDescriptionFilter = !string.IsNullOrWhiteSpace(request.Description);
+            var hasCategoryFilter = !string.IsNullOrWhiteSpace(request.Category);
+
+            // Only apply OR filter if at least one search parameter is provided
+            if (hasNameFilter || hasDescriptionFilter || hasCategoryFilter)
+            {
+                query = query.Where(p =>
+                    (hasNameFilter && p.Name.ToLower().Contains(request.Name!.ToLower())) ||
+                    (hasDescriptionFilter && p.Description != null && p.Description.ToLower().Contains(request.Description!.ToLower())) ||
+                    (hasCategoryFilter && p.Category == request.Category)
+                );
+            }
+
+            // Get total count before pagination
+            var totalCount = await query.CountAsync(cancellationToken);
+
+            // Apply pagination
+            var skip = (request.PageNumber - 1) * request.PageSize;
+            var items = await query
+                .Skip(skip)
+                .Take(request.PageSize)
+                .ToListAsync(cancellationToken);
+
+            // Calculate total pages
+            var totalPages = (int)Math.Ceiling(totalCount / (double)request.PageSize);
+
+            _logger.LogInformation("Found {TotalCount} products matching search criteria, returning page {PageNumber} of {TotalPages}",
+                totalCount, request.PageNumber, totalPages);
+
+            return new PagedResult<ProductEntity>
+            {
+                Items = items,
+                PageNumber = request.PageNumber,
+                PageSize = request.PageSize,
+                TotalCount = totalCount,
+                TotalPages = totalPages
+            };
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error searching products for AI tool");
+            throw;
+        }
+    }
+
     public async Task<PagedResult<ProductEntity>> SearchAsync(ProductSearchRequest request, CancellationToken cancellationToken = default)
     {
         _logger.LogInformation(
