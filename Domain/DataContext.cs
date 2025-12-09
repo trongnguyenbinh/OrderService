@@ -75,6 +75,35 @@ public class DataContext : DbContext
                 .HasForeignKey(x => x.ProductId)
                 .OnDelete(DeleteBehavior.Restrict);
         });
+
+        modelBuilder.Entity<ChatSessionEntity>(entity =>
+        {
+            entity.ToTable("chat_sessions");
+            entity.HasKey(x => x.Id);
+            entity.HasIndex(x => x.UserFingerprint);
+            entity.Property(x => x.UserFingerprint).IsRequired().HasMaxLength(255);
+            entity.Property(x => x.CreatedAt).IsRequired();
+            entity.Property(x => x.LastActivityAt).IsRequired();
+            entity.Property(x => x.IsActive).IsRequired();
+
+            // Relationship with ChatMessages
+            entity.HasMany(x => x.Messages)
+                .WithOne(x => x.Session)
+                .HasForeignKey(x => x.SessionId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<ChatMessageEntity>(entity =>
+        {
+            entity.ToTable("chat_messages");
+            entity.HasKey(x => x.Id);
+            entity.HasIndex(x => x.SessionId);
+            entity.Property(x => x.Role).IsRequired().HasMaxLength(20);
+            entity.Property(x => x.Content).IsRequired();
+            entity.Property(x => x.CreatedAt).IsRequired();
+            entity.Property(x => x.ModelUsed).HasMaxLength(50);
+            entity.Property(x => x.ToolCalled).HasMaxLength(100);
+        });
     }
 
     public DbConnection GetDbConnection()
@@ -91,4 +120,6 @@ public class DataContext : DbContext
     public DbSet<OrderItemEntity> OrderItems { get; set; }
     public DbSet<ProductEntity> Products { get; set; }
     public DbSet<CustomerEntity> Customers { get; set; }
+    public DbSet<ChatSessionEntity> ChatSessions { get; set; }
+    public DbSet<ChatMessageEntity> ChatMessages { get; set; }
 }

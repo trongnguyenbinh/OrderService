@@ -55,5 +55,10 @@ public class AutoMapperProfile : Profile
             .ForMember(dest => dest.LineTotal, opt => opt.Ignore())
             .ForMember(dest => dest.Order, opt => opt.Ignore())
             .ForMember(dest => dest.Product, opt => opt.Ignore());
+
+        // Chat mappings
+        CreateMap<ChatSessionEntity, ChatHistoryDto>();
+
+        CreateMap<ChatMessageEntity, ChatMessageDto>();
     }
 }
