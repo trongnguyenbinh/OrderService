@@ -58,6 +58,21 @@ public static class VaultConfiguration
             {
                 Console.WriteLine("Warning: ConnectionStrings__Default not found in Vault secrets.");
             }
+
+            // Map OpenAI API Key from Vault to application configuration
+            if (data.TryGetValue("OpenAI__ApiKey", out var openAIKey))
+            {
+                var apiKey = openAIKey?.ToString();
+                if (!string.IsNullOrWhiteSpace(apiKey))
+                {
+                    config["OpenAI:ApiKey"] = apiKey;
+                    Console.WriteLine("Successfully loaded OpenAI API key from Vault.");
+                }
+            }
+            else
+            {
+                Console.WriteLine("Warning: OpenAI__ApiKey not found in Vault secrets.");
+            }
         }
         catch (Exception ex)
         {
