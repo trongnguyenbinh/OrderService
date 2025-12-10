@@ -489,3 +489,5 @@ Domain/Migrations/
 # Development-specific configuration
 # Contains local development settings and should not be tracked
 LegacyOrder/appsettings.Development.json
+
+orders.db
