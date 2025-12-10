@@ -62,7 +62,7 @@ public class ProductsController : ControllerBase
     /// <summary>
     /// Create a new product
     /// </summary>
-    [HttpPost]
+    [HttpPost("create")]
     [ProducesResponseType(typeof(ProductDto), StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> Create([FromBody] CreateProductRequest request, CancellationToken cancellationToken)

@@ -81,7 +81,7 @@ public class OrdersController : ControllerBase
     /// <summary>
     /// Create a new order
     /// </summary>
-    [HttpPost]
+    [HttpPost("create")]
     [ProducesResponseType(typeof(OrderDto), StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
