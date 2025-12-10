@@ -14,15 +14,17 @@ namespace Domain;
 /// </summary>
 public class DataContextFactory : IDesignTimeDbContextFactory<DataContext>
 {
-    private const string FallbackConnectionString =
-        "Host=localhost;Port=5432;Database=legacy_order;Username=postgres;Password=postgres";
 
     public DataContext CreateDbContext(string[] args)
     {
         var optionsBuilder = new DbContextOptionsBuilder<DataContext>();
 
         // Try to get connection string from Vault, fallback to local if unavailable
-        var connectionString = GetConnectionStringFromVault() ?? FallbackConnectionString;
+        var connectionString = GetConnectionStringFromVault();
+        if (string.IsNullOrWhiteSpace(connectionString))
+        {
+            throw new Exception("Connection string is not configured.");
+        }
 
         optionsBuilder.UseNpgsql(connectionString);
 
