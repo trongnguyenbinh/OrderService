@@ -25,7 +25,7 @@ pipeline {
             steps {
                 script {
                     // Get Vault token from Jenkins credentials
-                    withCredentials([string(credentialsId: 'vault-token-connection-string', variable: 'VAULT_TOKEN')]) {
+                    withCredentials([string(credentialsId: 'vault-token-connection-string', variable: 'VAULT_TOKEN'), string(credentialsId: 'vault-address', variable: 'VAULT_ADDRESS')]) {
                         sh """
                             # Stop and remove existing container if it exists
                             docker stop legacy-order-service || true
@@ -36,6 +36,7 @@ pipeline {
                                 --name legacy-order-service \
                                 -p 127.0.0.1:${EXPOSE_PORT}:8080 \
                                 -e VAULT__TOKEN=${VAULT_TOKEN} \
+                                -e VAULT__ADDRESS=${VAULT_ADDRESS} \
                                 -e TZ=Asia/Bangkok \
                                 --restart unless-stopped \
                                 ${DOCKER_IMAGE}:${IMAGE_TAG}

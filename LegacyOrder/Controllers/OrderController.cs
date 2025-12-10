@@ -27,7 +27,7 @@ public class OrdersController : ControllerBase
     /// <param name="pageSize">Page size (default: 10, max: 100)</param>
     /// <param name="orderStatus">Optional order status filter (Pending, Completed, Cancelled)</param>
     /// <param name="cancellationToken">Cancellation token</param>
-    [HttpGet]
+    [HttpGet("search")]
     [ProducesResponseType(typeof(PagedResult<OrderDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> GetAll(

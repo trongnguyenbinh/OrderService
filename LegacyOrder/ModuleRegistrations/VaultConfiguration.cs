@@ -8,8 +8,8 @@ public static class VaultConfiguration
 {
     public static void LoadSecretsFromVault(this ConfigurationManager config)
     {
-        var vaultAddress = config["Vault:Address"] ?? Environment.GetEnvironmentVariable("VAULT__ADDRESS");
-        var vaultToken = config["Vault:Token"] ?? Environment.GetEnvironmentVariable("VAULT__TOKEN");
+        var vaultAddress = Environment.GetEnvironmentVariable("VAULT__ADDRESS");
+        var vaultToken = Environment.GetEnvironmentVariable("VAULT__TOKEN");
         var mountPoint = config["Vault:MountPoint"] ?? "secret";
         var secretPath = config["Vault:SecretPath"] ?? "legacy-order-api";
 
