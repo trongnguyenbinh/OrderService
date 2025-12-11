@@ -1,6 +1,6 @@
 using Common.Exceptions;
+using Domain.Interfaces.Repositories;
 using Microsoft.Extensions.Logging;
-using Repository.Interfaces;
 using Service.Interfaces;
 
 namespace Service.Implementations;

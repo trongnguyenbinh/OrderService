@@ -1,11 +1,11 @@
 using AutoMapper;
 using Common.Exceptions;
 using Domain.Entities;
+using Domain.Interfaces.Repositories;
 using Microsoft.Extensions.Logging;
 using Model.Enums;
 using Model.Models;
 using Model.RequestModels;
-using Repository.Interfaces;
 using Service.Interfaces;
 
 namespace Service.Implementations;

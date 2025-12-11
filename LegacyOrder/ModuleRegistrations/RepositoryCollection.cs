@@ -1,7 +1,7 @@
 ﻿using Domain;
+using Domain.Interfaces.Repositories;
 using Microsoft.EntityFrameworkCore;
 using Repository.Implementations;
-using Repository.Interfaces;
 
 namespace LegacyOrder.ModuleRegistrations;
 

@@ -1,7 +1,7 @@
 using Domain.Contractors;
 using Domain.Entities;
 
-namespace Repository.Interfaces;
+namespace Domain.Interfaces.Repositories;
 
 public interface IChatRepository : IRepository<ChatSessionEntity, Guid>
 {

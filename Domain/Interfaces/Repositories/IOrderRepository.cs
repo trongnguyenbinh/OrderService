@@ -3,7 +3,7 @@ using Domain.Entities;
 using Model.Enums;
 using Model.Models;
 
-namespace Repository.Interfaces;
+namespace Domain.Interfaces.Repositories;
 
 public interface IOrderRepository : IRepository<OrderEntity, Guid>
 {
