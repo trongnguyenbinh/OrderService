@@ -1,9 +1,9 @@
 using AutoMapper;
 using Domain.Entities;
+using Domain.Interfaces.Repositories;
 using Microsoft.Extensions.Logging;
 using Model.Models;
 using Model.RequestModels;
-using Repository.Interfaces;
 using Service.Interfaces;
 using System.Text.RegularExpressions;
 

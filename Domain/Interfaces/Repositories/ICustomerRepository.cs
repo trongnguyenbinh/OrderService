@@ -3,7 +3,7 @@ using Domain.Entities;
 using Model.Models;
 using Model.RequestModels;
 
-namespace Repository.Interfaces;
+namespace Domain.Interfaces.Repositories;
 
 public interface ICustomerRepository : IRepository<CustomerEntity, Guid>
 {

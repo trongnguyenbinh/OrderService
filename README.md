@@ -60,64 +60,112 @@ The project follows a clean, layered architecture pattern with clear separation 
 │    ProductsController, ChatController)                      │
 │  - Middleware (Global Exception Handling)                   │
 │  - Module Registrations (DI, Logging, Vault)                │
+│  - Composition Root (wires interfaces to implementations)   │
 └─────────────────────────────────────────────────────────────┘
-                            ↓
-┌─────────────────────────────────────────────────────────────┐
-│                      Service Layer                          │
-│  - Business Logic Implementation                            │
-│  - Services (OrderService, CustomerService,                 │
-│    ProductService, ChatService, OpenAIService)              │
-│  - AutoMapper Profiles                                      │
-└─────────────────────────────────────────────────────────────┘
-                            ↓
-┌─────────────────────────────────────────────────────────────┐
-│                    Repository Layer                         │
-│  - Data Access Abstraction                                  │
-│  - Repositories (OrderRepository, CustomerRepository,       │
-│    ProductRepository, ChatRepository)                       │
-│  - Query Building & Filtering                               │
-└─────────────────────────────────────────────────────────────┘
-                            ↓
-┌─────────────────────────────────────────────────────────────┐
-│                      Domain Layer                           │
-│  - Entity Framework DbContext                               │
-│  - Database Migrations                                      │
-│  - Data Seeders                                             │
-│  - Entity Configurations                                    │
-└─────────────────────────────────────────────────────────────┘
-                            ↓
-┌─────────────────────────────────────────────────────────────┐
-│                      Common Layer                           │
-│  - Shared Exceptions (NotFoundException,                   │
-│    InvalidOperationException)                               │
-│  - Enums (OrderStatus, CustomerType, etc.)                 │
-│  - Cross-cutting Concerns                                   │
-└─────────────────────────────────────────────────────────────┘
-                            ↓
-┌─────────────────────────────────────────────────────────────┐
-│                       Model Layer                           │
-│  - DTOs (Data Transfer Objects)                            │
-│  - Request Models (Create/Update requests)                  │
-│  - Response Models (PagedResult, etc.)                      │
-│  - Enums                                                    │
-└─────────────────────────────────────────────────────────────┘
+                    ↓                       ↓
+                    ↓                       ↓ (references both)
+                    ↓                       ↓
+┌──────────────────────────────┐  ┌──────────────────────────┐
+│       Service Layer          │  │    Repository Layer      │
+│  - Business Logic            │  │  - Data Access           │
+│  - Services (OrderService,   │  │  - Implementations       │
+│    CustomerService,          │  │    (OrderRepository,     │
+│    ProductService,           │  │    CustomerRepository,   │
+│    ChatService,              │  │    ProductRepository,    │
+│    OpenAIService)            │  │    ChatRepository)       │
+│  - AutoMapper Profiles       │  │  - Query Building        │
+└──────────────────────────────┘  └──────────────────────────┘
+                    ↓                       ↓
+                    ↓                       ↓
+                    └───────────┬───────────┘
+                                ↓
+                ┌───────────────────────────────────────────┐
+                │           Domain Layer (Core)             │
+                │  - Entity Definitions                     │
+                │  - Repository Interfaces                  │
+                │    (Domain/Interfaces/Repositories)       │
+                │  - Entity Framework DbContext             │
+                │  - Database Migrations                    │
+                │  - Data Seeders                           │
+                │  - Entity Configurations                  │
+                └───────────────────────────────────────────┘
+                                ↓
+                ┌───────────────────────────────────────────┐
+                │           Common Layer                    │
+                │  - Shared Exceptions                      │
+                │    (NotFoundException,                    │
+                │    InvalidOperationException)             │
+                │  - Enums (OrderStatus, CustomerType)      │
+                │  - Cross-cutting Concerns                 │
+                └───────────────────────────────────────────┘
+                                ↓
+                ┌───────────────────────────────────────────┐
+                │           Model Layer                     │
+                │  - DTOs (Data Transfer Objects)           │
+                │  - Request Models (Create/Update)         │
+                │  - Response Models (PagedResult)          │
+                │  - Enums                                  │
+                └───────────────────────────────────────────┘
 ```
 
 ### Layer Dependencies
 
-- **LegacyOrder** → Service
-- **Service** → Repository
-- **Repository** → Domain
+The architecture follows the **Dependency Inversion Principle (DIP)**:
+
+- **LegacyOrder (API)** → Service + Repository (composition root)
+- **Service** → Domain (depends only on abstractions)
+- **Repository** → Domain (implements Domain interfaces)
 - **Domain** → Common
 - **Common** → Model
 - **Model** → (No dependencies)
 
+**Key Architectural Principle:**
+- Service layer depends **only on Domain abstractions** (interfaces in `Domain.Interfaces.Repositories`)
+- Service layer has **no direct dependency** on Repository layer
+- Repository layer **implements** the interfaces defined in Domain layer
+- API layer acts as the **Composition Root**, wiring interfaces to concrete implementations via Dependency Injection
+
 ### Key Design Principles
 
-- **Dependency Injection**: All services and repositories are registered via DI
-- **Separation of Concerns**: Each layer has a specific responsibility
-- **Testability**: Comprehensive unit and integration tests
+- **Dependency Inversion Principle (DIP)**: High-level modules (Service) depend on abstractions (Domain interfaces), not on low-level modules (Repository)
+- **Dependency Injection**: All services and repositories are registered via DI in the API layer (Composition Root)
+- **Separation of Concerns**: Each layer has a specific responsibility with clear boundaries
+- **Interface Segregation**: Repository interfaces are defined in the Domain layer (`Domain.Interfaces.Repositories` namespace)
+- **Testability**: Service layer can be tested independently with mock repositories; comprehensive unit and integration tests
 - **Configuration Management**: Secrets managed via HashiCorp Vault
+
+### Architectural Highlights
+
+#### Clean Architecture with Dependency Inversion
+
+The solution implements **Clean Architecture** principles with proper dependency inversion:
+
+**Repository Interfaces Location:**
+- All repository interfaces are defined in `Domain/Interfaces/Repositories/`
+- Namespace: `Domain.Interfaces.Repositories`
+- Interfaces: `IOrderRepository`, `ICustomerRepository`, `IProductRepository`, `IChatRepository`
+
+**Service Layer Decoupling:**
+- Service layer depends **only** on Domain abstractions (no Repository project reference)
+- Services use repository interfaces from `Domain.Interfaces.Repositories` namespace
+- Complete decoupling from infrastructure concerns (database, data access implementation)
+
+**Repository Layer Implementation:**
+- Repository implementations are in `Repository/Implementations/`
+- Implements interfaces defined in Domain layer
+- Contains all database-specific logic and Entity Framework queries
+
+**Dependency Injection (Composition Root):**
+- API layer (`LegacyOrder`) references both Service and Repository projects
+- DI container maps interfaces to implementations in `ModuleRegistrations/RepositoryCollection.cs`
+- Example: `services.AddScoped<IOrderRepository, OrderRepository>()`
+
+**Benefits:**
+- ✅ Service layer is completely independent of infrastructure
+- ✅ Easy to swap repository implementations without changing services
+- ✅ Better testability - services can be tested with mock repositories
+- ✅ Follows SOLID principles (especially DIP and ISP)
+- ✅ Clear separation between business logic and data access
 
 ## API Endpoints
 

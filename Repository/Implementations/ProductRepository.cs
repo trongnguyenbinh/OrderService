@@ -1,10 +1,10 @@
 using Domain;
 using Domain.Entities;
+using Domain.Interfaces.Repositories;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Model.Models;
 using Model.RequestModels;
-using Repository.Interfaces;
 
 namespace Repository.Implementations;
 
