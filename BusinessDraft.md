@@ -112,7 +112,7 @@ PUT    /api/orders/{id}/cancel    - Cancel order (only if Pending)
 ### 4.4 AI Chat Support Endpoints
 ```
 POST   /api/chat/ask              - Send a question to AI assistant
-GET    /api/chat/history/{sessionId}  - Get chat history for a session (optional)
+GET    /api/chat/history/{sessionId}  - Get chat history for a session
 ```
 
 ## 5. Complex Business Logic for Orders
@@ -154,7 +154,7 @@ Cancelled
 **Business Rules:**
 - Can cancel only from Pending status
 - Once Completed, cannot change status
-- Stock is NOT returned on cancellation (simplification)
+- Stock is returned on cancellation
 
 ### 5.4 Inventory Check
 - **Simple Stock Check**: Verify available quantity before order creation
