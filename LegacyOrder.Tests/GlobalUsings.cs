@@ -9,6 +9,7 @@ global using Domain.Entities;
 global using Domain.Interfaces.Repositories;
 global using Model.Models;
 global using Model.RequestModels;
+global using Model.Enums;
 global using Service.Interfaces;
 global using Service.Implementations;
 global using Repository.Implementations;
