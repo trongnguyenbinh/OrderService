@@ -1,5 +1,7 @@
 namespace LegacyOrder.Tests.TestFixtures;
 
+using Model.Enums;
+
 public class TestDataBuilder
 {
     public static ProductEntity CreateProductEntity(
@@ -154,6 +156,135 @@ public class TestDataBuilder
             TotalCount = totalCount,
             TotalPages = totalPages
         };
+    }
+
+    public static CustomerEntity CreateCustomerEntity(
+        Guid? id = null,
+        string firstName = "John",
+        string lastName = "Doe",
+        string email = "john.doe@example.com",
+        string? phoneNumber = "555-123-4567",
+        CustomerType customerType = CustomerType.Regular,
+        bool isActive = true,
+        DateTime? createdAt = null,
+        DateTime? updatedAt = null)
+    {
+        return new CustomerEntity
+        {
+            Id = id ?? Guid.NewGuid(),
+            FirstName = firstName,
+            LastName = lastName,
+            Email = email,
+            PhoneNumber = phoneNumber,
+            CustomerType = customerType,
+            IsActive = isActive,
+            CreatedAt = createdAt ?? DateTime.UtcNow,
+            UpdatedAt = updatedAt ?? DateTime.UtcNow
+        };
+    }
+
+    public static CreateCustomerRequest CreateCustomerRequest(
+        string firstName = "John",
+        string lastName = "Doe",
+        string email = "john.doe@example.com",
+        string? phoneNumber = "555-123-4567",
+        CustomerType customerType = CustomerType.Regular,
+        bool isActive = true)
+    {
+        return new CreateCustomerRequest
+        {
+            FirstName = firstName,
+            LastName = lastName,
+            Email = email,
+            PhoneNumber = phoneNumber,
+            CustomerType = customerType,
+            IsActive = isActive
+        };
+    }
+
+    public static UpdateCustomerRequest CreateUpdateCustomerRequest(
+        string firstName = "Jane",
+        string lastName = "Smith",
+        string email = "jane.smith@example.com",
+        string? phoneNumber = "555-567-8901",
+        CustomerType customerType = CustomerType.Premium,
+        bool isActive = true)
+    {
+        return new UpdateCustomerRequest
+        {
+            FirstName = firstName,
+            LastName = lastName,
+            Email = email,
+            PhoneNumber = phoneNumber,
+            CustomerType = customerType,
+            IsActive = isActive
+        };
+    }
+
+    public static CustomerDto CreateCustomerDto(
+        Guid? id = null,
+        string firstName = "John",
+        string lastName = "Doe",
+        string email = "john.doe@example.com",
+        string? phoneNumber = "555-123-4567",
+        CustomerType customerType = CustomerType.Regular,
+        bool isActive = true,
+        DateTime? createdAt = null,
+        DateTime? updatedAt = null)
+    {
+        return new CustomerDto
+        {
+            Id = id ?? Guid.NewGuid(),
+            FirstName = firstName,
+            LastName = lastName,
+            Email = email,
+            PhoneNumber = phoneNumber,
+            CustomerType = customerType,
+            IsActive = isActive,
+            CreatedAt = createdAt ?? DateTime.UtcNow,
+            UpdatedAt = updatedAt ?? DateTime.UtcNow
+        };
+    }
+
+    public static CustomerSearchRequest CreateCustomerSearchRequest(
+        string? firstName = null,
+        string? lastName = null,
+        string? email = null,
+        string? phoneNumber = null,
+        CustomerType? customerType = null,
+        int pageNumber = 1,
+        int pageSize = 10,
+        string? sortBy = null,
+        string sortDirection = "asc")
+    {
+        return new CustomerSearchRequest
+        {
+            FirstName = firstName,
+            LastName = lastName,
+            Email = email,
+            PhoneNumber = phoneNumber,
+            CustomerType = customerType,
+            PageNumber = pageNumber,
+            PageSize = pageSize,
+            SortBy = sortBy,
+            SortDirection = sortDirection
+        };
+    }
+
+    public static List<CustomerEntity> CreateCustomerEntityList(int count = 5)
+    {
+        var customers = new List<CustomerEntity>();
+        for (int i = 1; i <= count; i++)
+        {
+            customers.Add(CreateCustomerEntity(
+                firstName: $"Customer{i}",
+                lastName: $"Last{i}",
+                email: $"customer{i}@example.com",
+                phoneNumber: $"555-{i:D3}-{i:D4}",
+                customerType: (CustomerType)(i % 3)
+            ));
+        }
+        return customers;
     }
 }
 
