@@ -31,6 +31,7 @@ public class ProductFlowIntegrationTests : IDisposable
     {
         _context.Database.EnsureDeleted();
         _context.Dispose();
+        GC.SuppressFinalize(this);
     }
 
     #region Create-Read-Update-Delete Flow Tests
