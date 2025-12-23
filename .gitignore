@@ -490,4 +490,8 @@ Domain/Migrations/
 # Contains local development settings and should not be tracked
 LegacyOrder/appsettings.Development.json
 
+# Documentation files
+# Local documentation and guides should not be tracked
+docs/
+
 orders.db
