@@ -10,7 +10,7 @@ jobs:
   build:
     name: Build and analyze
     runs-on: windows-latest
-    
+
     steps:
       - uses: actions/checkout@v4
         with:
@@ -20,6 +20,10 @@ jobs:
         with:
           java-version: 17
           distribution: 'zulu' # Alternative distribution options are available.
+      - name: Set up .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
       - name: Cache SonarQube packages
         uses: actions/cache@v4
         with:
@@ -39,9 +43,45 @@ jobs:
         run: |
           New-Item -Path ${{ runner.temp }}\scanner -ItemType Directory
           dotnet tool update dotnet-sonarscanner --tool-path ${{ runner.temp }}\scanner
-      - name: Build and analyze
+      - name: Restore dependencies
+        shell: powershell
+        run: dotnet restore
+      - name: Begin SonarQube analysis
         shell: powershell
         run: |
-          ${{ runner.temp }}\scanner\dotnet-sonarscanner begin /k:"trongnguyenbinh_OrderService_afb74bb9-e103-4874-944c-ed77f61d9464" /d:sonar.token="${{ secrets.SONAR_TOKEN }}" /d:sonar.host.url="${{ secrets.SONAR_HOST_URL }}"
-          dotnet build
+          ${{ runner.temp }}\scanner\dotnet-sonarscanner begin `
+            /k:"trongnguyenbinh_OrderService_afb74bb9-e103-4874-944c-ed77f61d9464" `
+            /d:sonar.token="${{ secrets.SONAR_TOKEN }}" `
+            /d:sonar.host.url="${{ secrets.SONAR_HOST_URL }}" `
+            /d:sonar.cs.opencover.reportsPaths="**/coverage.opencover.xml" `
+            /d:sonar.coverage.exclusions="**Tests.cs,**/bin/**,**/obj/**"
+      - name: Build solution
+        shell: powershell
+        run: dotnet build --no-restore --configuration Release
+      - name: Run tests with code coverage
+        shell: powershell
+        run: |
+          dotnet test `
+            --no-build `
+            --configuration Release `
+            --logger "trx;LogFileName=test-results.trx" `
+            /p:CollectCoverage=true `
+            /p:CoverletOutputFormat=opencover `
+            /p:CoverletOutput="./coverage/" `
+            /p:Exclude="[*Tests]*,[*Migrations]*"
+      - name: End SonarQube analysis
+        shell: powershell
+        run: |
           ${{ runner.temp }}\scanner\dotnet-sonarscanner end /d:sonar.token="${{ secrets.SONAR_TOKEN }}"
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results
+          path: '**/test-results.trx'
+      - name: Upload coverage reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-reports
+          path: '**/coverage/'
