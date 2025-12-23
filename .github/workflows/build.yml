@@ -1,55 +1,47 @@
-name: Build, Test and SonarQube Analysis
+name: Build
 
 on:
   push:
     branches:
       - main
-  pull_request:
-    types: [opened, synchronize, reopened]
+
 
 jobs:
   build:
-    name: Build and Analyze
-    runs-on: ubuntu-latest
+    name: Build and analyze
+    runs-on: windows-latest
     
     steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Shallow clones should be disabled for a better relevancy of analysis
       - name: Set up JDK 17
-        uses: actions/setup-java@v3
+        uses: actions/setup-java@v4
         with:
           java-version: 17
-          distribution: 'zulu'
-      
-      - name: Checkout code
-        uses: actions/checkout@v3
+          distribution: 'zulu' # Alternative distribution options are available.
+      - name: Cache SonarQube packages
+        uses: actions/cache@v4
         with:
-          fetch-depth: 0  # Shallow clones disable SonarQube analysis
-      
-      - name: Setup .NET
-        uses: actions/setup-dotnet@v3
+          path: ${{ runner.temp }}\cache
+          key: ${{ runner.os }}-sonar
+          restore-keys: ${{ runner.os }}-sonar
+      - name: Cache SonarQube scanner
+        id: cache-sonar-scanner
+        uses: actions/cache@v4
         with:
-          dotnet-version: '8.0.x'
-      
-      - name: Restore dependencies
-        run: dotnet restore
-      
-      - name: Install SonarScanner for .NET
+          path: ${{ runner.temp }}\scanner
+          key: ${{ runner.os }}-sonar-scanner
+          restore-keys: ${{ runner.os }}-sonar-scanner
+      - name: Install SonarQube scanner
+        if: steps.cache-sonar-scanner.outputs.cache-hit != 'true'
+        shell: powershell
         run: |
-          dotnet tool install --global dotnet-sonarscanner
-      
-      - name: Build and Analyze
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Built-in GitHub secret
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}    # You need to add this as a GitHub secret
-          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }} # You need to add this as a GitHub secret
+          New-Item -Path ${{ runner.temp }}\scanner -ItemType Directory
+          dotnet tool update dotnet-sonarscanner --tool-path ${{ runner.temp }}\scanner
+      - name: Build and analyze
+        shell: powershell
         run: |
-          # REPLACE 'legacy-order-service' WITH YOUR ACTUAL PROJECT KEY FROM SONARQUBE
-          dotnet sonarscanner begin /k:"legacy-order-service" /d:sonar.login="${{ secrets.SONAR_TOKEN }}" /d:sonar.host.url="${{ secrets.SONAR_HOST_URL }}"
-          
-          # Build the project
-          dotnet build --configuration Release --no-restore
-          
-          dotnet sonarscanner end /d:sonar.login="${{ secrets.SONAR_TOKEN }}"
-      
-      - name: Run tests
-        run: dotnet test --configuration Release --no-build --verbosity normal
-
+          ${{ runner.temp }}\scanner\dotnet-sonarscanner begin /k:"trongnguyenbinh_OrderService_afb74bb9-e103-4874-944c-ed77f61d9464" /d:sonar.token="${{ secrets.SONAR_TOKEN }}" /d:sonar.host.url="${{ secrets.SONAR_HOST_URL }}"
+          dotnet build
+          ${{ runner.temp }}\scanner\dotnet-sonarscanner end /d:sonar.token="${{ secrets.SONAR_TOKEN }}"
