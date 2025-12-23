@@ -1,5 +1,7 @@
 # LegacyOrder Service
 
+[![Quality Gate Status](https://sonar.veasy.vn/api/project_badges/measure?project=trongnguyenbinh_OrderService_afb74bb9-e103-4874-944c-ed77f61d9464&metric=alert_status&token=sqb_4cadfacd86ece679195e6554aca18abce7a92ea6)](https://sonar.veasy.vn/dashboard?id=trongnguyenbinh_OrderService_afb74bb9-e103-4874-944c-ed77f61d9464)
+
 ## Project Overview
 
 LegacyOrder Service is a refactor project from the poor architecture of the original project. I refactored the codebase to improve the architecture and make it more maintainable. Draft [BusinessDraft.md](BusinessDraft.md) for implement new features. 
