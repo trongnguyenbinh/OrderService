@@ -67,7 +67,23 @@ jobs:
       - name: Extract Sonar analysisId
         id: sonar
         run: |
-          ANALYSIS_ID=$(grep 'analysisId' .sonarqube/out/.sonar/report-task.txt | cut -d= -f2)
+          REPORT_FILE=$(find . -name report-task.txt | head -n 1)
+
+          if [ -z "$REPORT_FILE" ]; then
+            echo "❌ report-task.txt not found"
+            exit 1
+          fi
+
+          echo "Found report file: $REPORT_FILE"
+
+          ANALYSIS_ID=$(grep '^analysisId=' "$REPORT_FILE" | cut -d= -f2)
+
+          if [ -z "$ANALYSIS_ID" ]; then
+            echo "❌ analysisId not found in report-task.txt"
+            cat "$REPORT_FILE"
+            exit 1
+          fi
+
           echo "analysisId=${ANALYSIS_ID}" >> $GITHUB_OUTPUT
           echo "Sonar analysisId = ${ANALYSIS_ID}"
 
