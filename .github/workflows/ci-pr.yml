@@ -75,9 +75,7 @@ jobs:
             /k:"trongnguyenbinh_OrderService_afb74bb9-e103-4874-944c-ed77f61d9464" `
             /d:sonar.token="${{ secrets.SONAR_TOKEN }}" `
             /d:sonar.host.url="${{ secrets.SONAR_HOST_URL }}" `
-            /d:sonar.pullrequest.key="${{ github.event.pull_request.number }}" `
-            /d:sonar.pullrequest.branch="${{ github.head_ref }}" `
-            /d:sonar.pullrequest.base="main" `
+            /d:sonar.branch.name="main" `
             /d:sonar.cs.opencover.reportsPaths="**/coverage.opencover.xml" `
             /d:sonar.coverage.exclusions="**/*Tests.cs,**/bin/**,**/obj/**"
 
