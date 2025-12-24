@@ -1,24 +1,24 @@
-name: CI - Main SonarQube & Deploy Trigger
+name: CI - Main Quality Gate & Deploy
 
 on:
   push:
     branches: [ main ]
 
 jobs:
-  sonar-and-trigger:
+  quality-and-deploy:
     runs-on: ubuntu-latest
 
     steps:
-      # ------------------------------------
+      # -----------------------------
       # Checkout
-      # ------------------------------------
+      # -----------------------------
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      # ------------------------------------
+      # -----------------------------
       # Setup
-      # ------------------------------------
+      # -----------------------------
       - uses: actions/setup-java@v4
         with:
           distribution: zulu
@@ -28,12 +28,11 @@ jobs:
         with:
           dotnet-version: '8.0.x'
 
-      # ------------------------------------
+      # -----------------------------
       # Sonar Scanner
-      # ------------------------------------
+      # -----------------------------
       - name: Install SonarScanner
-        run: |
-          dotnet tool install dotnet-sonarscanner --tool-path .sonar
+        run: dotnet tool install dotnet-sonarscanner --tool-path .sonar
 
       - name: Sonar Begin
         run: |
@@ -43,8 +42,7 @@ jobs:
             /d:sonar.token="${{ secrets.SONAR_TOKEN }}" \
             /d:sonar.cs.opencover.reportsPaths="**/coverage.opencover.xml" \
             /d:sonar.qualitygate.wait=true \
-            /d:sonar.ws.timeout=120 \
-            /d:sonar.scanner.timeout=120
+            /d:sonar.ws.timeout=120
 
       - run: dotnet restore
       - run: dotnet build --no-restore --configuration Release
@@ -61,37 +59,12 @@ jobs:
           .sonar/dotnet-sonarscanner end \
             /d:sonar.token="${{ secrets.SONAR_TOKEN }}"
 
-      # ------------------------------------
-      # Extract analysisId
-      # ------------------------------------
-      - name: Extract Sonar analysisId
-        id: sonar
-        run: |
-          REPORT_FILE=$(find . -name report-task.txt | head -n 1)
-
-          if [ -z "$REPORT_FILE" ]; then
-            echo "❌ report-task.txt not found"
-            exit 1
-          fi
-
-          echo "Found report file: $REPORT_FILE"
-
-          ANALYSIS_ID=$(grep '^analysisId=' "$REPORT_FILE" | cut -d= -f2)
-
-          if [ -z "$ANALYSIS_ID" ]; then
-            echo "❌ analysisId not found in report-task.txt"
-            cat "$REPORT_FILE"
-            exit 1
-          fi
-
-          echo "analysisId=${ANALYSIS_ID}" >> $GITHUB_OUTPUT
-          echo "Sonar analysisId = ${ANALYSIS_ID}"
-
-      # ------------------------------------
-      # Trigger Jenkins
-      # ------------------------------------
+      # -----------------------------
+      # Trigger Jenkins (CHỈ KHI PASS)
+      # -----------------------------
       - name: Trigger Jenkins Deploy
+        if: success()
         run: |
           curl -X POST \
-            "${{ secrets.JENKINS_URL }}/job/OrderService/buildWithParameters?analysisId=${{ steps.sonar.outputs.analysisId }}" \
+            "${{ secrets.JENKINS_URL }}/job/legacy-order-deploy/build" \
             --user "${{ secrets.JENKINS_USER }}:${{ secrets.JENKINS_API_TOKEN }}"

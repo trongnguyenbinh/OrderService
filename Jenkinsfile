@@ -1,47 +1,13 @@
 pipeline {
     agent { label 'local' }
 
-    parameters {
-        string(name: 'analysisId', description: 'SonarQube analysisId')
-    }
-
     environment {
-        // -----------------------------
-        // Docker
-        // -----------------------------
         DOCKER_IMAGE = 'legacy-order-service'
         IMAGE_TAG    = "${BUILD_NUMBER}"
         EXPOSE_PORT  = 6868
     }
 
     stages {
-
-        stage('Verify SonarQube Quality Gate (analysisId)') {
-            steps {
-                withCredentials([
-                    string(credentialsId: 'sonar-token', variable: 'SONAR_TOKEN'),
-                    string(credentialsId: 'sonar-host-url', variable: 'SONAR_HOST_URL')
-                ]) {
-                    sh '''
-                      echo "🔍 Checking SonarQube Quality Gate"
-                      echo "analysisId = ${analysisId}"
-
-                      STATUS=$(curl -s -u ${SONAR_TOKEN}: \
-                        "${SONAR_HOST_URL}/api/qualitygates/project_status?analysisId=${analysisId}" \
-                        | jq -r '.projectStatus.status')
-
-                      echo "Quality Gate status: $STATUS"
-
-                      if [ "$STATUS" != "OK" ]; then
-                        echo "❌ Quality Gate FAILED"
-                        exit 1
-                      fi
-
-                      echo "✅ Quality Gate PASSED"
-                    '''
-                }
-            }
-        }
 
         stage('Build Docker Image') {
             steps {
@@ -90,7 +56,7 @@ pipeline {
 
     post {
         failure {
-            echo '🚨 DEPLOY BLOCKED'
+            echo '🚨 DEPLOY FAILED'
             sh 'docker logs legacy-order-service || true'
         }
         success {
