@@ -1,66 +1,54 @@
 pipeline {
-    agent {
-        label 'local'
+    agent { label 'local' }
+
+    parameters {
+        string(name: 'analysisId', description: 'SonarQube analysisId')
     }
 
     environment {
-        // -----------------------------
-        // Docker
-        // -----------------------------
         DOCKER_IMAGE = 'legacy-order-service'
         IMAGE_TAG    = "${BUILD_NUMBER}"
         EXPOSE_PORT  = 6868
-
-        // -----------------------------
-        // SonarQube
-        // -----------------------------
-        SONAR_HOST_URL   = 'https://sonar.veasy.vn'
-        SONAR_PROJECT_KEY = 'trongnguyenbinh_OrderService_afb74bb9-e103-4874-944c-ed77f61d9464'
     }
 
     stages {
 
-        // ==================================================
-        // STEP 4 – QUALITY GATE (BLOCK DEPLOY)
-        // ==================================================
-        stage('Verify SonarQube Quality Gate') {
+        stage('Verify SonarQube Quality Gate (analysisId)') {
             steps {
-                withCredentials([string(credentialsId: 'sonar-token', variable: 'SONAR_TOKEN')]) {
+                withCredentials([
+                    string(credentialsId: 'sonar-token', variable: 'SONAR_TOKEN'),
+                    string(credentialsId: 'sonar-host-url', variable: 'SONAR_HOST_URL')
+                ]) {
                     sh '''
-                        echo "🔍 Checking SonarQube Quality Gate..."
+                      echo "🔍 Checking SonarQube Quality Gate"
+                      echo "analysisId = ${analysisId}"
 
-                        STATUS=$(curl -s -u ${SONAR_TOKEN}: \
-                          "${SONAR_HOST_URL}/api/qualitygates/project_status?projectKey=${SONAR_PROJECT_KEY}" \
-                          | jq -r '.projectStatus.status')
+                      STATUS=$(curl -s -u ${SONAR_TOKEN}: \
+                        "${SONAR_HOST_URL}/api/qualitygates/project_status?analysisId=${analysisId}" \
+                        | jq -r '.projectStatus.status')
 
-                        echo "Quality Gate status: $STATUS"
+                      echo "Quality Gate status: $STATUS"
 
-                        if [ "$STATUS" != "OK" ]; then
-                          echo "❌ Quality Gate FAILED. Abort deployment."
-                          exit 1
-                        fi
+                      if [ "$STATUS" != "OK" ]; then
+                        echo "❌ Quality Gate FAILED"
+                        exit 1
+                      fi
 
-                        echo "✅ Quality Gate PASSED. Continue pipeline."
+                      echo "✅ Quality Gate PASSED"
                     '''
                 }
             }
         }
 
-        // ==================================================
-        // BUILD
-        // ==================================================
         stage('Build Docker Image') {
             steps {
                 sh """
-                    docker build -t ${DOCKER_IMAGE}:${IMAGE_TAG} .
-                    docker tag ${DOCKER_IMAGE}:${IMAGE_TAG} ${DOCKER_IMAGE}:latest
+                  docker build -t ${DOCKER_IMAGE}:${IMAGE_TAG} .
+                  docker tag ${DOCKER_IMAGE}:${IMAGE_TAG} ${DOCKER_IMAGE}:latest
                 """
             }
         }
 
-        // ==================================================
-        // DEPLOY
-        // ==================================================
         stage('Run Container') {
             steps {
                 withCredentials([
@@ -68,36 +56,30 @@ pipeline {
                     string(credentialsId: 'vault-address', variable: 'VAULT_ADDRESS')
                 ]) {
                     sh """
-                        echo "🚀 Deploying container..."
+                      docker stop legacy-order-service || true
+                      docker rm legacy-order-service || true
 
-                        docker stop legacy-order-service || true
-                        docker rm legacy-order-service || true
-
-                        docker run -d \
-                          --name legacy-order-service \
-                          -p 127.0.0.1:${EXPOSE_PORT}:8080 \
-                          -e VAULT__TOKEN=${VAULT_TOKEN} \
-                          -e VAULT__ADDRESS=${VAULT_ADDRESS} \
-                          -e TZ=Asia/Bangkok \
-                          --restart unless-stopped \
-                          ${DOCKER_IMAGE}:${IMAGE_TAG}
+                      docker run -d \
+                        --name legacy-order-service \
+                        -p 127.0.0.1:${EXPOSE_PORT}:8080 \
+                        -e VAULT__TOKEN=${VAULT_TOKEN} \
+                        -e VAULT__ADDRESS=${VAULT_ADDRESS} \
+                        -e TZ=Asia/Bangkok \
+                        --restart unless-stopped \
+                        ${DOCKER_IMAGE}:${IMAGE_TAG}
                     """
                 }
             }
         }
 
-        // ==================================================
-        // HEALTH CHECK
-        // ==================================================
         stage('Health Check') {
             steps {
                 sh """
-                    echo "🩺 Waiting for container to become healthy..."
-                    timeout 60 bash -c '
-                      until [ "\$(docker inspect -f {{.State.Health.Status}} legacy-order-service)" = "healthy" ];
-                      do sleep 2; done
-                    '
-                    echo "✅ Service is healthy!"
+                  timeout 60 bash -c '
+                    until [ "\$(docker inspect -f {{.State.Health.Status}} legacy-order-service)" = "healthy" ];
+                    do sleep 2; done
+                  '
+                  echo "Service is healthy"
                 """
             }
         }
@@ -105,11 +87,11 @@ pipeline {
 
     post {
         failure {
-            echo '🚨 Pipeline FAILED – Deploy was blocked or unhealthy'
+            echo '🚨 DEPLOY BLOCKED'
             sh 'docker logs legacy-order-service || true'
         }
         success {
-            echo '🎉 Pipeline SUCCESS – Service deployed safely'
+            echo '🚀 DEPLOY SUCCESS'
         }
     }
 }

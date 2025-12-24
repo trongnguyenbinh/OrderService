@@ -1,44 +1,26 @@
-name: CI - PR Validation (.NET 8)
+name: CI - PR Validation
 
 on:
   pull_request:
-    branches:
-      - main
+    branches: [ main ]
 
 jobs:
   build-test:
-    name: Build & Test (.NET 8)
-    runs-on: windows-latest
+    runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout source code
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Set up .NET 8
-        uses: actions/setup-dotnet@v4
+      - uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '8.0.x'
 
-      - name: Restore dependencies
-        shell: powershell
-        run: dotnet restore
+      - run: dotnet restore
+      - run: dotnet build --no-restore --configuration Release
 
-      - name: Build
-        shell: powershell
-        run: dotnet build --no-restore --configuration Release
-
-      - name: Run tests with coverage
-        shell: powershell
+      - name: Run tests
         run: |
-          dotnet test `
-            --no-build `
-            --configuration Release `
-            --settings coverlet.runsettings `
-            --logger "trx;LogFileName=test-results.trx"
-
-      - name: Upload test results
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: test-results
-          path: '**/test-results.trx'
+          dotnet test \
+            --no-build \
+            --configuration Release \
+            --settings coverlet.runsettings
