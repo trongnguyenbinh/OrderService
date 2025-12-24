@@ -6,6 +6,9 @@ pipeline {
     }
 
     environment {
+        // -----------------------------
+        // Docker
+        // -----------------------------
         DOCKER_IMAGE = 'legacy-order-service'
         IMAGE_TAG    = "${BUILD_NUMBER}"
         EXPOSE_PORT  = 6868
