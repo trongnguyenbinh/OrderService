@@ -14,7 +14,7 @@ pipeline {
         // -----------------------------
         // SonarQube
         // -----------------------------
-        SONAR_HOST_URL   = 'http://sonar.your-domain:9000'
+        SONAR_HOST_URL   = 'https://sonar.veasy.vn'
         SONAR_PROJECT_KEY = 'trongnguyenbinh_OrderService_afb74bb9-e103-4874-944c-ed77f61d9464'
     }
 
