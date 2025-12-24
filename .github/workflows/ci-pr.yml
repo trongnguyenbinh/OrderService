@@ -1,35 +1,48 @@
-name: Build
+name: CI - PR Validation
 
 on:
-  push:
+  pull_request:
     branches:
       - main
 
-
 jobs:
-  build:
-    name: Build and analyze
+  build-test-sonar:
+    name: Build, Test, Coverage & SonarQube
     runs-on: windows-latest
 
     steps:
-      - uses: actions/checkout@v4
+      # --------------------------------------------------
+      # Checkout
+      # --------------------------------------------------
+      - name: Checkout source code
+        uses: actions/checkout@v4
         with:
-          fetch-depth: 0  # Shallow clones should be disabled for a better relevancy of analysis
-      - name: Set up JDK 17
+          fetch-depth: 0   # REQUIRED for SonarQube PR analysis
+
+      # --------------------------------------------------
+      # Setup environments
+      # --------------------------------------------------
+      - name: Set up JDK 17 (required by Sonar)
         uses: actions/setup-java@v4
         with:
           java-version: 17
-          distribution: 'zulu' # Alternative distribution options are available.
-      - name: Set up .NET
+          distribution: 'zulu'
+
+      - name: Set up .NET 8
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '8.0.x'
+
+      # --------------------------------------------------
+      # Cache SonarQube
+      # --------------------------------------------------
       - name: Cache SonarQube packages
         uses: actions/cache@v4
         with:
           path: ${{ runner.temp }}\cache
           key: ${{ runner.os }}-sonar
           restore-keys: ${{ runner.os }}-sonar
+
       - name: Cache SonarQube scanner
         id: cache-sonar-scanner
         uses: actions/cache@v4
@@ -37,15 +50,24 @@ jobs:
           path: ${{ runner.temp }}\scanner
           key: ${{ runner.os }}-sonar-scanner
           restore-keys: ${{ runner.os }}-sonar-scanner
+
       - name: Install SonarQube scanner
         if: steps.cache-sonar-scanner.outputs.cache-hit != 'true'
         shell: powershell
         run: |
-          New-Item -Path ${{ runner.temp }}\scanner -ItemType Directory
+          New-Item -Path ${{ runner.temp }}\scanner -ItemType Directory -Force
           dotnet tool update dotnet-sonarscanner --tool-path ${{ runner.temp }}\scanner
+
+      # --------------------------------------------------
+      # Restore & Build
+      # --------------------------------------------------
       - name: Restore dependencies
         shell: powershell
         run: dotnet restore
+
+      # --------------------------------------------------
+      # SonarQube - Begin Analysis (PR Mode)
+      # --------------------------------------------------
       - name: Begin SonarQube analysis
         shell: powershell
         run: |
@@ -53,11 +75,19 @@ jobs:
             /k:"trongnguyenbinh_OrderService_afb74bb9-e103-4874-944c-ed77f61d9464" `
             /d:sonar.token="${{ secrets.SONAR_TOKEN }}" `
             /d:sonar.host.url="${{ secrets.SONAR_HOST_URL }}" `
+            /d:sonar.pullrequest.key="${{ github.event.pull_request.number }}" `
+            /d:sonar.pullrequest.branch="${{ github.head_ref }}" `
+            /d:sonar.pullrequest.base="main" `
             /d:sonar.cs.opencover.reportsPaths="**/coverage.opencover.xml" `
-            /d:sonar.coverage.exclusions="**Tests.cs,**/bin/**,**/obj/**"
+            /d:sonar.coverage.exclusions="**/*Tests.cs,**/bin/**,**/obj/**"
+
       - name: Build solution
         shell: powershell
         run: dotnet build --no-restore --configuration Release
+
+      # --------------------------------------------------
+      # Test & Coverage
+      # --------------------------------------------------
       - name: Run tests with code coverage
         shell: powershell
         run: |
@@ -69,16 +99,35 @@ jobs:
             /p:CoverletOutputFormat=opencover `
             /p:CoverletOutput="./coverage/" `
             /p:Exclude="[*Tests]*,[*Migrations]*"
+
+      # --------------------------------------------------
+      # SonarQube - End Analysis
+      # --------------------------------------------------
       - name: End SonarQube analysis
         shell: powershell
         run: |
-          ${{ runner.temp }}\scanner\dotnet-sonarscanner end /d:sonar.token="${{ secrets.SONAR_TOKEN }}"
+          ${{ runner.temp }}\scanner\dotnet-sonarscanner end `
+            /d:sonar.token="${{ secrets.SONAR_TOKEN }}"
+
+      # --------------------------------------------------
+      # Quality Gate (BLOCK MERGE)
+      # --------------------------------------------------
+      - name: SonarQube Quality Gate Check
+        uses: SonarSource/sonarqube-quality-gate-action@v1
+        timeout-minutes: 5
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+
+      # --------------------------------------------------
+      # Artifacts (Optional but useful)
+      # --------------------------------------------------
       - name: Upload test results
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: test-results
           path: '**/test-results.trx'
+
       - name: Upload coverage reports
         if: always()
         uses: actions/upload-artifact@v4
