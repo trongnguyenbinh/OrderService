@@ -94,11 +94,8 @@ jobs:
           dotnet test `
             --no-build `
             --configuration Release `
-            --logger "trx;LogFileName=test-results.trx" `
-            /p:CollectCoverage=true `
-            /p:CoverletOutputFormat=opencover `
-            /p:CoverletOutput="./coverage/" `
-            /p:Exclude="[*Tests]*,[*Migrations]*"
+            --settings coverlet.runsettings `
+            --logger "trx;LogFileName=test-results.trx"
 
       # --------------------------------------------------
       # SonarQube - End Analysis
