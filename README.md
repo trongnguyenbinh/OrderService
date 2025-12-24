@@ -65,7 +65,7 @@ The project follows a clean, layered architecture pattern with clear separation 
 │  - Composition Root (wires interfaces to implementations)   │
 └─────────────────────────────────────────────────────────────┘
                     ↓                       ↓
-                    ↓                       ↓ (references both)
+                    ↓                       ↓ 
                     ↓                       ↓
 ┌──────────────────────────────┐  ┌──────────────────────────┐
 │       Service Layer          │  │    Repository Layer      │
@@ -266,60 +266,117 @@ The solution implements **Clean Architecture** principles with proper dependency
 
 ## CI/CD Pipeline
 
-The project uses a fully automated CI/CD pipeline with Jenkins and Docker:
+The project implements a three-stage CI/CD workflow that ensures code quality and reliability.
 
-### Pipeline Workflow
+### Pipeline Flow
 
 ```
-┌──────────────────────────────────────────────────────────────┐
-│  1. Developer pushes code to GitHub repository               │
-└──────────────────────────────────────────────────────────────┘
-                            ↓
-┌──────────────────────────────────────────────────────────────┐
-│  2. GitHub webhook triggers Jenkins build                    │
-└──────────────────────────────────────────────────────────────┘
-                            ↓
-┌──────────────────────────────────────────────────────────────┐
-│  3. Jenkins connects to deployment server (agent: local)     │
-└──────────────────────────────────────────────────────────────┘
-                            ↓
-┌──────────────────────────────────────────────────────────────┐
-│  4. Build Docker Image                                       │
-│     - Multi-stage build using .NET 8.0 SDK Alpine            │
-│     - Restore NuGet packages                                 │
-│     - Compile and publish application                        │
-│     - Create runtime image with ASP.NET Core Alpine          │
-│     - Tag with build number and 'latest'                     │
-└──────────────────────────────────────────────────────────────┘
-                            ↓
-┌──────────────────────────────────────────────────────────────┐
-│  5. Deploy Application                                       │
-│     - Stop and remove existing container                     │
-│     - Run new container with:                                │
-│       * Vault address & token for secrets management         │
-│       * Port mapping (127.0.0.1:6868 → 8080)                 │
-│       * Environment variables (TZ=Asia/Bangkok)              │
-│       * Auto-restart policy (unless-stopped)                 │
-└──────────────────────────────────────────────────────────────┘
-                            ↓
-┌──────────────────────────────────────────────────────────────┐
-│  6. Health Check                                             │
-│     - Wait for container to become healthy (60s timeout)     │
-│     - Verify /api/health endpoint responds                   │
-│     - Display logs on failure                                │
-└──────────────────────────────────────────────────────────────┘
+1. PULL REQUEST VALIDATION
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Developer
+   │
+   │ Push feature branch
+   ▼
+GitHub Pull Request (→ main)
+   │
+   ▼
+GitHub Actions (ci-pr.yml)
+   ├─ Restore
+   ├─ Build
+   ├─ Unit Tests
+   │
+   ├─ ❌ FAIL → PR BLOCKED (cannot merge)
+   └─ ✅ PASS → Allow merge
+
+
+2. MAIN BRANCH QUALITY GATE
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Merge PR → main
+   │
+   ▼
+GitHub Actions (ci-main-sonar.yml)
+   ├─ Restore
+   ├─ Build (clean)
+   ├─ Unit / Integration Tests
+   ├─ SonarQube Scan
+   ├─ Wait Quality Gate
+   │
+   ├─ ❌ Quality Gate FAIL
+   │     └─ STOP ❌ (Not deploy)
+   │
+   └─ ✅ Quality Gate PASS
+         │
+         ▼
+     Trigger Jenkins (API call)
+
+
+3. JENKINS DEPLOYMENT
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Jenkins Pipeline
+   │
+   ▼
+Build Docker Image
+   │
+   ▼
+Run Container
+   │
+   ▼
+Health Check
+   │
+   ├─ ❌ FAIL → Deploy FAILED (rollback/log)
+   └─ ✅ PASS → Deploy SUCCESS 🎉
 ```
 
-### Jenkins Configuration
+### Stage 1: Pull Request Validation
 
-- **Agent**: `local` (deployment server)
-- **Docker Image**: `legacy-order-service`
-- **Image Tag**: `${BUILD_NUMBER}` and `latest`
-- **Exposed Port**: `6868` (mapped to container port 8080)
-- **Credentials**: Vault token and address stored in Jenkins credentials
+**Workflow**: `ci-pr.yml` (GitHub Actions)
 
-### Environment Variables
+**Trigger**: Feature branch push & PR creation to main
 
-- `VAULT__TOKEN` - HashiCorp Vault authentication token
-- `VAULT__ADDRESS` - Vault server address
-- `TZ` - Timezone (Asia/Bangkok)
+**Steps**:
+- `dotnet restore` - Restore dependencies
+- `dotnet build` - Build project
+- `dotnet test` - Run unit tests
+
+**Outcome**:
+- ✅ **PASS**: PR can be merged to main
+- ❌ **FAIL**: PR is blocked, developer must fix issues
+
+---
+
+### Stage 2: Main Branch Quality Gate
+
+**Workflow**: `ci-main-sonar.yml` (GitHub Actions)
+
+**Trigger**: Merge to main branch
+
+**Steps**:
+- `dotnet restore` - Restore dependencies
+- `dotnet clean build` - Clean build
+- `dotnet test` - Run unit & integration tests
+- SonarQube scan - Code quality analysis
+- Wait for quality gate result
+
+**Outcome**:
+- ✅ **PASS**: Quality gate approved → Trigger Jenkins deployment
+- ❌ **FAIL**: Quality gate rejected → **STOP, NO DEPLOYMENT** (code does not reach production)
+
+---
+
+### Stage 3: Jenkins Deployment
+
+**Trigger**: API call from Stage 2 (only if quality gate passes)
+
+**Agent**: `local` (deployment server)
+
+**Steps**:
+1. Build Docker image (multi-stage, .NET 8.0 SDK Alpine)
+2. Run container with Vault secrets & port mapping (127.0.0.1:6868 → 8080)
+3. Health check validation (`/api/health` endpoint)
+
+**Outcome**:
+- ✅ **PASS**: Deployment successful, application live in production
+- ❌ **FAIL**: Deployment failed, rollback to previous version
