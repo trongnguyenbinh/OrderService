@@ -57,7 +57,8 @@ public class AutoMapperProfile : Profile
             .ForMember(dest => dest.Product, opt => opt.Ignore());
 
         // Chat mappings
-        CreateMap<ChatSessionEntity, ChatHistoryDto>();
+        CreateMap<ChatSessionEntity, ChatHistoryDto>()
+            .ForMember(dest => dest.SessionId, opt => opt.MapFrom(src => src.Id));
 
         CreateMap<ChatMessageEntity, ChatMessageDto>();
     }
