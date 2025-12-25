@@ -13,4 +13,5 @@ global using Model.Enums;
 global using Service.Interfaces;
 global using Service.Implementations;
 global using Repository.Implementations;
+global using LegacyOrder.Tests.TestFixtures;
 

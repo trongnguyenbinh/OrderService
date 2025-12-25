@@ -308,5 +308,184 @@ public class OrderFlowIntegrationTests : IDisposable
     }
 
     #endregion
+
+    #region PricingService Integration Tests
+
+    [Fact]
+    public async Task OrderFlow_PricingService_RegularCustomerReceivesNoDiscount()
+    {
+        // Arrange
+        var customer = TestDataBuilder.CreateCustomerEntity(customerType: CustomerType.Regular);
+        var product = TestDataBuilder.CreateProductEntity(price: 100m, stockQuantity: 10);
+
+        await _customerRepository.AddAsync(customer);
+        await _productRepository.AddAsync(product);
+
+        var createRequest = TestDataBuilder.CreateOrderRequest(
+            customerId: customer.Id,
+            orderItems: new List<OrderItemRequest>
+            {
+                TestDataBuilder.CreateOrderItemRequest(productId: product.Id, quantity: 2)
+            }
+        );
+
+        // Act
+        var order = await _orderService.CreateOrderAsync(createRequest);
+
+        // Assert - Regular customer should have 0% discount
+        var subTotal = 100m * 2; // 2 items at 100 each
+        order.DiscountAmount.Should().Be(0m);
+        order.TotalAmount.Should().Be(subTotal);
+    }
+
+    [Fact]
+    public async Task OrderFlow_PricingService_PremiumCustomerReceives5PercentDiscount()
+    {
+        // Arrange
+        var customer = TestDataBuilder.CreateCustomerEntity(customerType: CustomerType.Premium);
+        var product = TestDataBuilder.CreateProductEntity(price: 100m, stockQuantity: 10);
+
+        await _customerRepository.AddAsync(customer);
+        await _productRepository.AddAsync(product);
+
+        var createRequest = TestDataBuilder.CreateOrderRequest(
+            customerId: customer.Id,
+            orderItems: new List<OrderItemRequest>
+            {
+                TestDataBuilder.CreateOrderItemRequest(productId: product.Id, quantity: 2)
+            }
+        );
+
+        // Act
+        var order = await _orderService.CreateOrderAsync(createRequest);
+
+        // Assert - Premium customer should have 5% discount
+        var subTotal = 100m * 2; // 2 items at 100 each
+        var expectedDiscount = subTotal * 0.05m; // 5% discount
+        order.DiscountAmount.Should().Be(expectedDiscount);
+        order.TotalAmount.Should().Be(subTotal - expectedDiscount);
+    }
+
+    [Fact]
+    public async Task OrderFlow_PricingService_VIPCustomerReceives10PercentDiscount()
+    {
+        // Arrange
+        var customer = TestDataBuilder.CreateCustomerEntity(customerType: CustomerType.VIP);
+        var product = TestDataBuilder.CreateProductEntity(price: 100m, stockQuantity: 10);
+
+        await _customerRepository.AddAsync(customer);
+        await _productRepository.AddAsync(product);
+
+        var createRequest = TestDataBuilder.CreateOrderRequest(
+            customerId: customer.Id,
+            orderItems: new List<OrderItemRequest>
+            {
+                TestDataBuilder.CreateOrderItemRequest(productId: product.Id, quantity: 2)
+            }
+        );
+
+        // Act
+        var order = await _orderService.CreateOrderAsync(createRequest);
+
+        // Assert - VIP customer should have 10% discount
+        var subTotal = 100m * 2; // 2 items at 100 each
+        var expectedDiscount = subTotal * 0.10m; // 10% discount
+        order.DiscountAmount.Should().Be(expectedDiscount);
+        order.TotalAmount.Should().Be(subTotal - expectedDiscount);
+    }
+
+    #endregion
+
+    #region InventoryService Integration Tests
+
+    [Fact]
+    public async Task OrderFlow_InventoryService_ReducesStockOnOrderCreation()
+    {
+        // Arrange
+        var customer = TestDataBuilder.CreateCustomerEntity();
+        var product = TestDataBuilder.CreateProductEntity(price: 50m, stockQuantity: 100);
+
+        await _customerRepository.AddAsync(customer);
+        await _productRepository.AddAsync(product);
+
+        var initialStock = product.StockQuantity;
+
+        var createRequest = TestDataBuilder.CreateOrderRequest(
+            customerId: customer.Id,
+            orderItems: new List<OrderItemRequest>
+            {
+                TestDataBuilder.CreateOrderItemRequest(productId: product.Id, quantity: 30)
+            }
+        );
+
+        // Act
+        await _orderService.CreateOrderAsync(createRequest);
+
+        // Assert - Stock should be reduced
+        var updatedProduct = await _productRepository.GetByIdAsync(product.Id);
+        updatedProduct!.StockQuantity.Should().Be(initialStock - 30);
+    }
+
+    [Fact]
+    public async Task OrderFlow_InventoryService_RestoresStockOnOrderCancellation()
+    {
+        // Arrange
+        var customer = TestDataBuilder.CreateCustomerEntity();
+        var product = TestDataBuilder.CreateProductEntity(price: 50m, stockQuantity: 100);
+
+        await _customerRepository.AddAsync(customer);
+        await _productRepository.AddAsync(product);
+
+        var createRequest = TestDataBuilder.CreateOrderRequest(
+            customerId: customer.Id,
+            orderItems: new List<OrderItemRequest>
+            {
+                TestDataBuilder.CreateOrderItemRequest(productId: product.Id, quantity: 30)
+            }
+        );
+
+        var order = await _orderService.CreateOrderAsync(createRequest);
+
+        // Act - Cancel the order
+        await _orderService.CancelOrderAsync(order.Id);
+
+        // Assert - Stock should be restored
+        var finalProduct = await _productRepository.GetByIdAsync(product.Id);
+        finalProduct!.StockQuantity.Should().Be(100); // Back to original
+    }
+
+    [Fact]
+    public async Task OrderFlow_InventoryService_HandlesMultipleProductsInOrder()
+    {
+        // Arrange
+        var customer = TestDataBuilder.CreateCustomerEntity();
+        var product1 = TestDataBuilder.CreateProductEntity(price: 50m, stockQuantity: 100);
+        var product2 = TestDataBuilder.CreateProductEntity(price: 75m, stockQuantity: 50);
+
+        await _customerRepository.AddAsync(customer);
+        await _productRepository.AddAsync(product1);
+        await _productRepository.AddAsync(product2);
+
+        var createRequest = TestDataBuilder.CreateOrderRequest(
+            customerId: customer.Id,
+            orderItems: new List<OrderItemRequest>
+            {
+                TestDataBuilder.CreateOrderItemRequest(productId: product1.Id, quantity: 20),
+                TestDataBuilder.CreateOrderItemRequest(productId: product2.Id, quantity: 15)
+            }
+        );
+
+        // Act
+        await _orderService.CreateOrderAsync(createRequest);
+
+        // Assert - Both products should have reduced stock
+        var updatedProduct1 = await _productRepository.GetByIdAsync(product1.Id);
+        var updatedProduct2 = await _productRepository.GetByIdAsync(product2.Id);
+
+        updatedProduct1!.StockQuantity.Should().Be(80); // 100 - 20
+        updatedProduct2!.StockQuantity.Should().Be(35); // 50 - 15
+    }
+
+    #endregion
 }
 
