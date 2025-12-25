@@ -293,7 +293,7 @@ public class CustomerService : ICustomerService
         try
         {
             // Simple email validation regex
-            var emailRegex = new Regex(@"^[^@\s]+@[^@\s]+\.[^@\s]+$", RegexOptions.IgnoreCase);
+            var emailRegex = new Regex(@"^[^@\s]+@[^@\s]+\.[^@\s]+$", RegexOptions.IgnoreCase, TimeSpan.FromMilliseconds(100));
             return emailRegex.IsMatch(email);
         }
         catch
@@ -310,7 +310,7 @@ public class CustomerService : ICustomerService
         try
         {
             // Simple phone number validation - allows digits, spaces, dashes, parentheses, and plus sign
-            var phoneRegex = new Regex(@"^[\d\s\-\(\)\+]+$");
+            var phoneRegex = new Regex(@"^[\d\s\-\(\)\+]+$", RegexOptions.None, TimeSpan.FromMilliseconds(100));
             return phoneRegex.IsMatch(phoneNumber) && phoneNumber.Length >= 10 && phoneNumber.Length <= 20;
         }
         catch
