@@ -1,7 +1,6 @@
 namespace LegacyOrder.Tests.UnitTests.ModuleRegistrations;
 
 using LegacyOrder.ModuleRegistrations;
-using Microsoft.EntityFrameworkCore;
 
 public class RepositoryCollectionTests
 {

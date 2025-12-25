@@ -1,5 +1,4 @@
 using Domain.Contractors;
-using LegacyOrder.Tests.TestFixtures;
 
 namespace LegacyOrder.Tests.UnitTests.Domain.Entities;
 

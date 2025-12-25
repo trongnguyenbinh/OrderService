@@ -1,6 +1,4 @@
 using Domain.Contractors;
-using LegacyOrder.Tests.TestFixtures;
-using Model.Enums;
 
 namespace LegacyOrder.Tests.UnitTests.Domain.Entities;
 

@@ -1,5 +1,3 @@
-using LegacyOrder.Tests.TestFixtures;
-
 namespace LegacyOrder.Tests.UnitTests.Services;
 
 public class ProductServiceTests

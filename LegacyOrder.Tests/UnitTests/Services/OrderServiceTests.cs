@@ -1,7 +1,3 @@
-using LegacyOrder.Tests.TestFixtures;
-using Model.Enums;
-using Common.Exceptions;
-
 namespace LegacyOrder.Tests.UnitTests.Services;
 
 public class OrderServiceTests

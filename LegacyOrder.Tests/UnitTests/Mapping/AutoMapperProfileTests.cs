@@ -1,5 +1,4 @@
 using LegacyOrder.ModuleRegistrations;
-using LegacyOrder.Tests.TestFixtures;
 
 namespace LegacyOrder.Tests.UnitTests.Mapping;
 
