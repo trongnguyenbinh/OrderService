@@ -432,5 +432,52 @@ public class TestDataBuilder
         }
         return orders;
     }
+
+    public static ChatSessionEntity CreateChatSessionEntity(
+        Guid? id = null,
+        string userFingerprint = "test-fingerprint-123",
+        DateTime? createdAt = null,
+        DateTime? lastActivityAt = null,
+        bool isActive = true)
+    {
+        return new ChatSessionEntity
+        {
+            Id = id ?? Guid.NewGuid(),
+            UserFingerprint = userFingerprint,
+            CreatedAt = createdAt ?? DateTime.UtcNow,
+            LastActivityAt = lastActivityAt ?? DateTime.UtcNow,
+            IsActive = isActive,
+            Messages = new List<ChatMessageEntity>()
+        };
+    }
+
+    public static ChatMessageEntity CreateChatMessageEntity(
+        Guid? id = null,
+        Guid? sessionId = null,
+        string role = "user",
+        string content = "Test message",
+        DateTime? createdAt = null,
+        int? promptTokens = null,
+        int? completionTokens = null,
+        int? totalTokens = null,
+        string? modelUsed = null,
+        string? toolCalled = null,
+        int? responseTimeMs = null)
+    {
+        return new ChatMessageEntity
+        {
+            Id = id ?? Guid.NewGuid(),
+            SessionId = sessionId ?? Guid.NewGuid(),
+            Role = role,
+            Content = content,
+            CreatedAt = createdAt ?? DateTime.UtcNow,
+            PromptTokens = promptTokens,
+            CompletionTokens = completionTokens,
+            TotalTokens = totalTokens,
+            ModelUsed = modelUsed,
+            ToolCalled = toolCalled,
+            ResponseTimeMs = responseTimeMs
+        };
+    }
 }
 
