@@ -14,4 +14,6 @@ global using Service.Interfaces;
 global using Service.Implementations;
 global using Repository.Implementations;
 global using LegacyOrder.Tests.TestFixtures;
+global using Microsoft.Extensions.DependencyInjection;
+global using Common.Exceptions;
 
