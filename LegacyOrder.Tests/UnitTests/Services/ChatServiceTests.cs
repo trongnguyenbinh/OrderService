@@ -1,6 +1,5 @@
 using LegacyOrder.Tests.TestFixtures;
 using Microsoft.Extensions.Configuration;
-using OpenAI.Chat;
 
 namespace LegacyOrder.Tests.UnitTests.Services;
 
@@ -40,23 +39,6 @@ public class ChatServiceTests
 
     #region AskAsync Tests
 
-    [Fact(Skip = "ChatCompletion is sealed and cannot be mocked. This test requires integration testing or service refactoring.")]
-    public async Task AskAsync_WithValidRequest_CreatesNewSession()
-    {
-        // This test is skipped because ChatCompletion from the OpenAI SDK is a sealed class
-        // and cannot be mocked with Moq. To properly test this, we would need to:
-        // 1. Create a wrapper interface for ChatCompletion
-        // 2. Refactor IOpenAIService to return the wrapper
-        // 3. Or convert this to an integration test
-        await Task.CompletedTask;
-    }
-
-    [Fact(Skip = "ChatCompletion is sealed and cannot be mocked. This test requires integration testing or service refactoring.")]
-    public async Task AskAsync_WithExistingSession_RetrievesSession()
-    {
-        await Task.CompletedTask;
-    }
-
     [Fact]
     public async Task AskAsync_WithMessageExceedingMaxLength_ThrowsArgumentException()
     {
@@ -71,24 +53,6 @@ public class ChatServiceTests
         // Act & Assert
         var act = async () => await _chatService.AskAsync(request);
         await act.Should().ThrowAsync<ArgumentException>();
-    }
-
-    [Fact(Skip = "ChatCompletion is sealed and cannot be mocked. This test requires integration testing or service refactoring.")]
-    public async Task AskAsync_SavesUserMessage()
-    {
-        await Task.CompletedTask;
-    }
-
-    [Fact(Skip = "ChatCompletion is sealed and cannot be mocked. This test requires integration testing or service refactoring.")]
-    public async Task AskAsync_SavesAssistantMessage()
-    {
-        await Task.CompletedTask;
-    }
-
-    [Fact(Skip = "ChatCompletion is sealed and cannot be mocked. This test requires integration testing or service refactoring.")]
-    public async Task AskAsync_UpdatesSessionActivity()
-    {
-        await Task.CompletedTask;
     }
 
     #endregion

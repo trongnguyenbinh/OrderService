@@ -1,8 +1,6 @@
 using Domain;
 using LegacyOrder.Tests.TestFixtures;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration;
-using OpenAI.Chat;
 
 namespace LegacyOrder.Tests.IntegrationTests;
 
@@ -30,39 +28,7 @@ public class ChatFlowIntegrationTests : IDisposable
         GC.SuppressFinalize(this);
     }
 
-
-
     #region Chat Session Creation and Message Flow Tests
-
-    [Fact(Skip = "ChatCompletion is sealed and cannot be mocked. This test requires service refactoring.")]
-    public async Task ChatFlow_CreateSessionAndSendMessage_Success()
-    {
-        await Task.CompletedTask;
-    }
-
-    [Fact(Skip = "ChatCompletion is sealed and cannot be mocked. This test requires service refactoring.")]
-    public async Task ChatFlow_SendMultipleMessages_SessionPersists()
-    {
-        await Task.CompletedTask;
-    }
-
-    [Fact(Skip = "ChatCompletion is sealed and cannot be mocked. This test requires service refactoring.")]
-    public async Task ChatFlow_RetrieveSessionByFingerprint_Success()
-    {
-        await Task.CompletedTask;
-    }
-
-    [Fact(Skip = "ChatCompletion is sealed and cannot be mocked. This test requires service refactoring.")]
-    public async Task ChatFlow_GetChatHistory_ReturnsAllMessages()
-    {
-        await Task.CompletedTask;
-    }
-
-    [Fact(Skip = "ChatCompletion is sealed and cannot be mocked. This test requires service refactoring.")]
-    public async Task ChatFlow_SessionActivityUpdated_OnNewMessage()
-    {
-        await Task.CompletedTask;
-    }
 
     [Fact]
     public async Task ChatFlow_MessageCountIncreases_WithEachMessage()
