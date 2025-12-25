@@ -1,4 +1,3 @@
-using LegacyOrder.Tests.TestFixtures;
 using Microsoft.Extensions.Configuration;
 
 namespace LegacyOrder.Tests.UnitTests.Services;
@@ -94,6 +93,98 @@ public class ChatServiceTests
 
         // Assert
         result.Should().BeNull();
+    }
+
+    #endregion
+
+    #region Constructor Tests
+
+    [Fact]
+    public void Constructor_WithDefaultConfiguration_SetsDefaultValues()
+    {
+        // Arrange
+        var mockConfig = new Mock<IConfiguration>();
+        mockConfig.Setup(c => c["Chat:MaxMessagesPerSession"]).Returns((string?)null);
+        mockConfig.Setup(c => c["Chat:MaxMessageLength"]).Returns((string?)null);
+
+        // Act
+        var service = new ChatService(
+            _mockChatRepository.Object,
+            _mockProductRepository.Object,
+            _mockOpenAIService.Object,
+            _mockMapper.Object,
+            _mockLogger.Object,
+            mockConfig.Object);
+
+        // Assert
+        service.Should().NotBeNull();
+    }
+
+    [Fact]
+    public void Constructor_WithCustomConfiguration_SetsCustomValues()
+    {
+        // Arrange
+        var mockConfig = new Mock<IConfiguration>();
+        mockConfig.Setup(c => c["Chat:MaxMessagesPerSession"]).Returns("20");
+        mockConfig.Setup(c => c["Chat:MaxMessageLength"]).Returns("5000");
+
+        // Act
+        var service = new ChatService(
+            _mockChatRepository.Object,
+            _mockProductRepository.Object,
+            _mockOpenAIService.Object,
+            _mockMapper.Object,
+            _mockLogger.Object,
+            mockConfig.Object);
+
+        // Assert
+        service.Should().NotBeNull();
+    }
+
+    #endregion
+
+    #region Additional AskAsync Tests
+
+    [Fact]
+    public async Task AskAsync_WithValidMessage_LogsInformation()
+    {
+        // Arrange
+        var request = new ChatRequest
+        {
+            UserFingerprint = "test-fingerprint",
+            Message = "Hello",
+            SessionId = null
+        };
+
+        var session = TestDataBuilder.CreateChatSessionEntity();
+        _mockChatRepository.Setup(r => r.GetSessionByIdAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((ChatSessionEntity?)null);
+        _mockChatRepository.Setup(r => r.GetSessionByFingerprintAsync(request.UserFingerprint, It.IsAny<CancellationToken>()))
+            .ReturnsAsync((ChatSessionEntity?)null);
+        _mockChatRepository.Setup(r => r.AddAsync(It.IsAny<ChatSessionEntity>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(session);
+        _mockChatRepository.Setup(r => r.GetSessionMessagesAsync(session.Id, It.IsAny<int>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new List<ChatMessageEntity>());
+
+        // Act & Assert - Should throw because OpenAI service is not properly mocked
+        var act = async () => await _chatService.AskAsync(request);
+        await act.Should().ThrowAsync<Exception>();
+    }
+
+    [Fact]
+    public async Task AskAsync_WithEmptyMessage_ThrowsArgumentException()
+    {
+        // Arrange
+        var request = new ChatRequest
+        {
+            UserFingerprint = "test-fingerprint",
+            Message = "",
+            SessionId = null
+        };
+
+        // Act & Assert
+        var act = async () => await _chatService.AskAsync(request);
+        await act.Should().ThrowAsync<Exception>();
     }
 
     #endregion

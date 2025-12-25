@@ -1,5 +1,4 @@
 using LegacyOrder.Controllers;
-using LegacyOrder.Tests.TestFixtures;
 using Microsoft.AspNetCore.Mvc;
 
 namespace LegacyOrder.Tests.UnitTests.Controllers;

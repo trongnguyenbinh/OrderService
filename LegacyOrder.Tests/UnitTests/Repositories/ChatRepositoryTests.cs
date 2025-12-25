@@ -1,5 +1,4 @@
 using Domain;
-using LegacyOrder.Tests.TestFixtures;
 using Microsoft.EntityFrameworkCore;
 
 namespace LegacyOrder.Tests.UnitTests.Repositories;

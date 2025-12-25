@@ -1,7 +1,3 @@
-using Model.Enums;
-using Service.Implementations;
-using Service.Interfaces;
-
 namespace LegacyOrder.Tests.UnitTests.Services;
 
 public class PricingServiceTests

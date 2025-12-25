@@ -1,8 +1,5 @@
 using LegacyOrder.Controllers;
-using LegacyOrder.Tests.TestFixtures;
 using Microsoft.AspNetCore.Mvc;
-using Model.Enums;
-using Common.Exceptions;
 
 namespace LegacyOrder.Tests.UnitTests.Controllers;
 

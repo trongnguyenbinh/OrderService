@@ -1,5 +1,4 @@
 using LegacyOrder.ModuleRegistrations;
-using LegacyOrder.Tests.TestFixtures;
 using Microsoft.AspNetCore.Http;
 using System.Net;
 using System.Text.Json;

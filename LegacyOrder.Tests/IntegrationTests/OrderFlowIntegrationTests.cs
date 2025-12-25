@@ -1,7 +1,5 @@
 using Domain;
-using LegacyOrder.Tests.TestFixtures;
 using Microsoft.EntityFrameworkCore;
-using Model.Enums;
 
 namespace LegacyOrder.Tests.IntegrationTests;
 
