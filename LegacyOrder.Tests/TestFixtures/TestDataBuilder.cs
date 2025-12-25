@@ -286,5 +286,151 @@ public class TestDataBuilder
         }
         return customers;
     }
+
+    // Order-related test data builders
+    public static OrderEntity CreateOrderEntity(
+        Guid? id = null,
+        string orderNumber = "ORD-20240101120000-1234",
+        Guid? customerId = null,
+        OrderStatus orderStatus = OrderStatus.Pending,
+        decimal subTotal = 100m,
+        decimal discountAmount = 10m,
+        decimal totalAmount = 90m,
+        DateTime? orderDate = null,
+        DateTime? updatedAt = null,
+        List<OrderItemEntity>? orderItems = null)
+    {
+        return new OrderEntity
+        {
+            Id = id ?? Guid.NewGuid(),
+            OrderNumber = orderNumber,
+            CustomerId = customerId ?? Guid.NewGuid(),
+            OrderStatus = orderStatus,
+            SubTotal = subTotal,
+            DiscountAmount = discountAmount,
+            TotalAmount = totalAmount,
+            OrderDate = orderDate ?? DateTime.UtcNow,
+            UpdatedAt = updatedAt ?? DateTime.UtcNow,
+            OrderItems = orderItems ?? new List<OrderItemEntity>()
+        };
+    }
+
+    public static CreateOrderRequest CreateOrderRequest(
+        Guid? customerId = null,
+        List<OrderItemRequest>? orderItems = null)
+    {
+        return new CreateOrderRequest
+        {
+            CustomerId = customerId ?? Guid.NewGuid(),
+            OrderItems = orderItems ?? new List<OrderItemRequest>
+            {
+                new OrderItemRequest { ProductId = Guid.NewGuid(), Quantity = 2 }
+            }
+        };
+    }
+
+    public static OrderItemEntity CreateOrderItemEntity(
+        Guid? id = null,
+        Guid? orderId = null,
+        Guid? productId = null,
+        int quantity = 2,
+        decimal unitPrice = 50m,
+        decimal lineTotal = 100m)
+    {
+        return new OrderItemEntity
+        {
+            Id = id ?? Guid.NewGuid(),
+            OrderId = orderId ?? Guid.NewGuid(),
+            ProductId = productId ?? Guid.NewGuid(),
+            Quantity = quantity,
+            UnitPrice = unitPrice,
+            LineTotal = lineTotal
+        };
+    }
+
+    public static OrderItemRequest CreateOrderItemRequest(
+        Guid? productId = null,
+        int quantity = 2)
+    {
+        return new OrderItemRequest
+        {
+            ProductId = productId ?? Guid.NewGuid(),
+            Quantity = quantity
+        };
+    }
+
+    public static OrderDto CreateOrderDto(
+        Guid? id = null,
+        string orderNumber = "ORD-20240101120000-1234",
+        Guid? customerId = null,
+        string customerName = "John Doe",
+        string customerEmail = "john.doe@example.com",
+        CustomerType customerType = CustomerType.Regular,
+        OrderStatus orderStatus = OrderStatus.Pending,
+        decimal subTotal = 100m,
+        decimal discountAmount = 10m,
+        decimal totalAmount = 90m,
+        DateTime? orderDate = null,
+        DateTime? updatedAt = null,
+        List<OrderItemDto>? orderItems = null)
+    {
+        return new OrderDto
+        {
+            Id = id ?? Guid.NewGuid(),
+            OrderNumber = orderNumber,
+            CustomerId = customerId ?? Guid.NewGuid(),
+            CustomerName = customerName,
+            CustomerEmail = customerEmail,
+            CustomerType = customerType,
+            OrderStatus = orderStatus,
+            SubTotal = subTotal,
+            DiscountAmount = discountAmount,
+            TotalAmount = totalAmount,
+            OrderDate = orderDate ?? DateTime.UtcNow,
+            UpdatedAt = updatedAt ?? DateTime.UtcNow,
+            OrderItems = orderItems ?? new List<OrderItemDto>()
+        };
+    }
+
+    public static OrderItemDto CreateOrderItemDto(
+        Guid? id = null,
+        Guid? orderId = null,
+        Guid? productId = null,
+        string productName = "Test Product",
+        string productSKU = "TEST-SKU",
+        int quantity = 2,
+        decimal unitPrice = 50m,
+        decimal lineTotal = 100m)
+    {
+        return new OrderItemDto
+        {
+            Id = id ?? Guid.NewGuid(),
+            OrderId = orderId ?? Guid.NewGuid(),
+            ProductId = productId ?? Guid.NewGuid(),
+            ProductName = productName,
+            ProductSKU = productSKU,
+            Quantity = quantity,
+            UnitPrice = unitPrice,
+            LineTotal = lineTotal
+        };
+    }
+
+    public static List<OrderEntity> CreateOrderEntityList(int count = 5, Guid? customerId = null)
+    {
+        var orders = new List<OrderEntity>();
+        var defaultCustomerId = customerId ?? Guid.NewGuid();
+        for (int i = 1; i <= count; i++)
+        {
+            orders.Add(CreateOrderEntity(
+                orderNumber: $"ORD-20240101120000-{i:D4}",
+                customerId: defaultCustomerId,
+                subTotal: 100m * i,
+                discountAmount: 10m * i,
+                totalAmount: 90m * i,
+                orderDate: DateTime.UtcNow.AddDays(-count + i)
+            ));
+        }
+        return orders;
+    }
 }
 
