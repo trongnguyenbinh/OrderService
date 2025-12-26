@@ -16,13 +16,13 @@ public static class VaultConfiguration
         if (string.IsNullOrWhiteSpace(vaultAddress))
         {
             Console.WriteLine("Vault configuration skipped: VAULT__ADDRESS is not set.");
-            throw new Exception("VAULT__ADDRESS is not set.");
+            throw new InvalidOperationException("VAULT__ADDRESS is not set.");
         }
 
         if (string.IsNullOrWhiteSpace(vaultToken))
         {
             Console.WriteLine("Please set the VAULT__TOKEN environment variable to authenticate with HashiCorp Vault.");
-            throw new Exception("VAULT__TOKEN is not set.");
+            throw new InvalidOperationException("VAULT__TOKEN is not set.");
         }
 
         try

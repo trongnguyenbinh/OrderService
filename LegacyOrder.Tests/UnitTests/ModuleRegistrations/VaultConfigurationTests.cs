@@ -99,7 +99,7 @@ public class VaultConfigurationTests
 
             // Act & Assert
             var action = () => configManager.LoadSecretsFromVault();
-            action.Should().Throw<Exception>()
+            action.Should().Throw<InvalidOperationException>()
                 .WithMessage("VAULT__TOKEN is not set.");
         }
         finally
@@ -151,7 +151,7 @@ public class VaultConfigurationTests
 
             // Act & Assert
             var action = () => configManager.LoadSecretsFromVault();
-            action.Should().Throw<Exception>()
+            action.Should().Throw<InvalidOperationException>()
                 .WithMessage("VAULT__TOKEN is not set.");
         }
         finally

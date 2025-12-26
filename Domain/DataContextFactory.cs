@@ -23,7 +23,7 @@ public class DataContextFactory : IDesignTimeDbContextFactory<DataContext>
         var connectionString = GetConnectionStringFromVault();
         if (string.IsNullOrWhiteSpace(connectionString))
         {
-            throw new Exception("Connection string is not configured.");
+            throw new InvalidOperationException("Connection string is not configured.");
         }
 
         optionsBuilder.UseNpgsql(connectionString);

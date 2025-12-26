@@ -182,25 +182,25 @@ public class ProductService : IProductService
         if (string.IsNullOrWhiteSpace(request.Name))
         {
             _logger.LogWarning("Service: Validation failed - Product name is required");
-            throw new ArgumentException("Product name is required", nameof(request.Name));
+            throw new ArgumentException("Product name is required", nameof(request));
         }
 
         if (string.IsNullOrWhiteSpace(request.SKU))
         {
             _logger.LogWarning("Service: Validation failed - Product SKU is required");
-            throw new ArgumentException("Product SKU is required", nameof(request.SKU));
+            throw new ArgumentException("Product SKU is required", nameof(request));
         }
 
         if (request.Price <= 0)
         {
             _logger.LogWarning("Service: Validation failed - Product price must be greater than zero");
-            throw new ArgumentException("Product price must be greater than zero", nameof(request.Price));
+            throw new ArgumentException("Product price must be greater than zero", nameof(request));
         }
 
         if (request.StockQuantity < 0)
         {
             _logger.LogWarning("Service: Validation failed - Stock quantity cannot be negative");
-            throw new ArgumentException("Stock quantity cannot be negative", nameof(request.StockQuantity));
+            throw new ArgumentException("Stock quantity cannot be negative", nameof(request));
         }
     }
 
@@ -209,25 +209,25 @@ public class ProductService : IProductService
         if (string.IsNullOrWhiteSpace(request.Name))
         {
             _logger.LogWarning("Service: Validation failed - Product name is required");
-            throw new ArgumentException("Product name is required", nameof(request.Name));
+            throw new ArgumentException("Product name is required", nameof(request));
         }
 
         if (string.IsNullOrWhiteSpace(request.SKU))
         {
             _logger.LogWarning("Service: Validation failed - Product SKU is required");
-            throw new ArgumentException("Product SKU is required", nameof(request.SKU));
+            throw new ArgumentException("Product SKU is required", nameof(request));
         }
 
         if (request.Price <= 0)
         {
             _logger.LogWarning("Service: Validation failed - Product price must be greater than zero");
-            throw new ArgumentException("Product price must be greater than zero", nameof(request.Price));
+            throw new ArgumentException("Product price must be greater than zero", nameof(request));
         }
 
         if (request.StockQuantity < 0)
         {
             _logger.LogWarning("Service: Validation failed - Stock quantity cannot be negative");
-            throw new ArgumentException("Stock quantity cannot be negative", nameof(request.StockQuantity));
+            throw new ArgumentException("Stock quantity cannot be negative", nameof(request));
         }
     }
 
@@ -238,19 +238,19 @@ public class ProductService : IProductService
         if (request.PageNumber < 1)
         {
             _logger.LogWarning("Service: Validation failed - Page number must be greater than or equal to 1");
-            throw new ArgumentException("Page number must be greater than or equal to 1", nameof(request.PageNumber));
+            throw new ArgumentException("Page number must be greater than or equal to 1", nameof(request));
         }
 
         if (request.PageSize < 1)
         {
             _logger.LogWarning("Service: Validation failed - Page size must be greater than 0");
-            throw new ArgumentException("Page size must be greater than 0", nameof(request.PageSize));
+            throw new ArgumentException("Page size must be greater than 0", nameof(request));
         }
 
         if (request.PageSize > maxPageSize)
         {
             _logger.LogWarning("Service: Validation failed - Page size cannot exceed {MaxPageSize}", maxPageSize);
-            throw new ArgumentException($"Page size cannot exceed {maxPageSize}", nameof(request.PageSize));
+            throw new ArgumentException($"Page size cannot exceed {maxPageSize}", nameof(request));
         }
 
         // Validate sort direction
@@ -259,7 +259,7 @@ public class ProductService : IProductService
             request.SortDirection.ToLower() != "desc")
         {
             _logger.LogWarning("Service: Validation failed - Sort direction must be 'asc' or 'desc'");
-            throw new ArgumentException("Sort direction must be 'asc' or 'desc'", nameof(request.SortDirection));
+            throw new ArgumentException("Sort direction must be 'asc' or 'desc'", nameof(request));
         }
 
         // Validate sort field
@@ -269,7 +269,7 @@ public class ProductService : IProductService
             if (!validSortFields.Contains(request.SortBy.ToLower()))
             {
                 _logger.LogWarning("Service: Validation failed - Invalid sort field: {SortBy}", request.SortBy);
-                throw new ArgumentException("Sort by must be either 'Price' or 'StockQuantity'", nameof(request.SortBy));
+                throw new ArgumentException("Sort by must be either 'Price' or 'StockQuantity'", nameof(request));
             }
         }
     }
