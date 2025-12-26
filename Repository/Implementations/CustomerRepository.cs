@@ -22,156 +22,109 @@ public class CustomerRepository : ICustomerRepository
     public async Task<CustomerEntity?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
     {
         _logger.LogInformation("Getting customer by ID: {CustomerId}", id);
-        
-        try
+
+        var customer = await _context.Customers
+            .AsNoTracking()
+            .FirstOrDefaultAsync(c => c.Id == id, cancellationToken);
+
+        if (customer == null)
         {
-            var customer = await _context.Customers
-                .AsNoTracking()
-                .FirstOrDefaultAsync(c => c.Id == id, cancellationToken);
-            
-            if (customer == null)
-            {
-                _logger.LogWarning("Customer not found with ID: {CustomerId}", id);
-            }
-            
-            return customer;
+            _logger.LogWarning("Customer not found with ID: {CustomerId}", id);
         }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error getting customer by ID: {CustomerId}", id);
-            throw;
-        }
+
+        return customer;
     }
 
     public async Task<IEnumerable<CustomerEntity>> GetAllAsync(CancellationToken cancellationToken = default)
     {
         _logger.LogInformation("Getting all customers");
-        
-        try
-        {
-            var customers = await _context.Customers
-                .AsNoTracking()
-                .OrderByDescending(c => c.CreatedAt)
-                .ToListAsync(cancellationToken);
-            
-            _logger.LogInformation("Retrieved {Count} customers", customers.Count);
-            return customers;
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error getting all customers");
-            throw;
-        }
+
+        var customers = await _context.Customers
+            .AsNoTracking()
+            .OrderByDescending(c => c.CreatedAt)
+            .ToListAsync(cancellationToken);
+
+        _logger.LogInformation("Retrieved {Count} customers", customers.Count);
+        return customers;
+
     }
 
     public async Task<CustomerEntity> AddAsync(CustomerEntity entity, CancellationToken cancellationToken = default)
     {
         _logger.LogInformation("Adding new customer with Email: {Email}", entity.Email);
-        
-        try
-        {
-            entity.Id = Guid.NewGuid();
-            entity.CreatedAt = DateTime.UtcNow;
-            entity.UpdatedAt = DateTime.UtcNow;
-            
-            await _context.Customers.AddAsync(entity, cancellationToken);
-            await _context.SaveChangesAsync(cancellationToken);
-            
-            _logger.LogInformation("Successfully added customer with ID: {CustomerId}", entity.Id);
-            return entity;
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error adding customer with Email: {Email}", entity.Email);
-            throw;
-        }
+
+        entity.Id = Guid.NewGuid();
+        entity.CreatedAt = DateTime.UtcNow;
+        entity.UpdatedAt = DateTime.UtcNow;
+
+        await _context.Customers.AddAsync(entity, cancellationToken);
+        await _context.SaveChangesAsync(cancellationToken);
+
+        _logger.LogInformation("Successfully added customer with ID: {CustomerId}", entity.Id);
+        return entity;
     }
 
     public async Task<CustomerEntity> UpdateAsync(CustomerEntity entity, CancellationToken cancellationToken = default)
     {
         _logger.LogInformation("Updating customer with ID: {CustomerId}", entity.Id);
-        
-        try
+
+        var existingCustomer = await _context.Customers.FindAsync(new object[] { entity.Id }, cancellationToken);
+
+        if (existingCustomer == null)
         {
-            var existingCustomer = await _context.Customers.FindAsync(new object[] { entity.Id }, cancellationToken);
-            
-            if (existingCustomer == null)
-            {
-                _logger.LogWarning("Customer not found for update with ID: {CustomerId}", entity.Id);
-                throw new KeyNotFoundException($"Customer with ID {entity.Id} not found");
-            }
-            
-            existingCustomer.FirstName = entity.FirstName;
-            existingCustomer.LastName = entity.LastName;
-            existingCustomer.Email = entity.Email;
-            existingCustomer.PhoneNumber = entity.PhoneNumber;
-            existingCustomer.CustomerType = entity.CustomerType;
-            existingCustomer.IsActive = entity.IsActive;
-            existingCustomer.UpdatedAt = DateTime.UtcNow;
-            
-            await _context.SaveChangesAsync(cancellationToken);
-            
-            _logger.LogInformation("Successfully updated customer with ID: {CustomerId}", entity.Id);
-            return existingCustomer;
+            _logger.LogWarning("Customer not found for update with ID: {CustomerId}", entity.Id);
+            throw new KeyNotFoundException($"Customer with ID {entity.Id} not found");
         }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error updating customer with ID: {CustomerId}", entity.Id);
-            throw;
-        }
+
+        existingCustomer.FirstName = entity.FirstName;
+        existingCustomer.LastName = entity.LastName;
+        existingCustomer.Email = entity.Email;
+        existingCustomer.PhoneNumber = entity.PhoneNumber;
+        existingCustomer.CustomerType = entity.CustomerType;
+        existingCustomer.IsActive = entity.IsActive;
+        existingCustomer.UpdatedAt = DateTime.UtcNow;
+
+        await _context.SaveChangesAsync(cancellationToken);
+
+        _logger.LogInformation("Successfully updated customer with ID: {CustomerId}", entity.Id);
+        return existingCustomer;
     }
 
     public async Task<bool> DeleteAsync(Guid id, CancellationToken cancellationToken = default)
     {
         _logger.LogInformation("Deleting customer with ID: {CustomerId}", id);
-        
-        try
+
+        var customer = await _context.Customers.FindAsync(new object[] { id }, cancellationToken);
+
+        if (customer == null)
         {
-            var customer = await _context.Customers.FindAsync(new object[] { id }, cancellationToken);
-            
-            if (customer == null)
-            {
-                _logger.LogWarning("Customer not found for deletion with ID: {CustomerId}", id);
-                return false;
-            }
-            
-            // Soft delete by setting IsActive to false
-            customer.IsActive = false;
-            customer.UpdatedAt = DateTime.UtcNow;
-            await _context.SaveChangesAsync(cancellationToken);
-            
-            _logger.LogInformation("Successfully soft deleted customer with ID: {CustomerId}", id);
-            return true;
+            _logger.LogWarning("Customer not found for deletion with ID: {CustomerId}", id);
+            return false;
         }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error deleting customer with ID: {CustomerId}", id);
-            throw;
-        }
+
+        // Soft delete by setting IsActive to false
+        customer.IsActive = false;
+        customer.UpdatedAt = DateTime.UtcNow;
+        await _context.SaveChangesAsync(cancellationToken);
+
+        _logger.LogInformation("Successfully soft deleted customer with ID: {CustomerId}", id);
+        return true;
     }
 
     public async Task<CustomerEntity?> GetByEmailAsync(string email, CancellationToken cancellationToken = default)
     {
         _logger.LogInformation("Getting customer by Email: {Email}", email);
 
-        try
-        {
-            var customer = await _context.Customers
-                .AsNoTracking()
-                .FirstOrDefaultAsync(c => c.Email == email, cancellationToken);
+        var customer = await _context.Customers
+            .AsNoTracking()
+            .FirstOrDefaultAsync(c => c.Email == email, cancellationToken);
 
-            if (customer == null)
-            {
-                _logger.LogWarning("Customer not found with Email: {Email}", email);
-            }
-
-            return customer;
-        }
-        catch (Exception ex)
+        if (customer == null)
         {
-            _logger.LogError(ex, "Error getting customer by Email: {Email}", email);
-            throw;
+            _logger.LogWarning("Customer not found with Email: {Email}", email);
         }
+
+        return customer;
     }
 
     public async Task<PagedResult<CustomerEntity>> SearchAsync(CustomerSearchRequest request, CancellationToken cancellationToken = default)
@@ -180,75 +133,67 @@ public class CustomerRepository : ICustomerRepository
             "Searching customers - FirstName: {FirstName}, LastName: {LastName}, Email: {Email}, PhoneNumber: {PhoneNumber}, CustomerType: {CustomerType}, Page: {PageNumber}, PageSize: {PageSize}, SortBy: {SortBy}, SortDirection: {SortDirection}",
             request.FirstName, request.LastName, request.Email, request.PhoneNumber, request.CustomerType, request.PageNumber, request.PageSize, request.SortBy, request.SortDirection);
 
-        try
+        // Start with base query - filter by IsActive = true
+        var query = _context.Customers
+            .AsNoTracking()
+            .Where(c => c.IsActive);
+
+        // Apply search filters
+        if (!string.IsNullOrWhiteSpace(request.FirstName))
         {
-            // Start with base query - filter by IsActive = true
-            var query = _context.Customers
-                .AsNoTracking()
-                .Where(c => c.IsActive == true);
-
-            // Apply search filters
-            if (!string.IsNullOrWhiteSpace(request.FirstName))
-            {
-                var firstNameLower = request.FirstName.ToLower();
-                query = query.Where(c => c.FirstName.ToLower().Contains(firstNameLower));
-            }
-
-            if (!string.IsNullOrWhiteSpace(request.LastName))
-            {
-                var lastNameLower = request.LastName.ToLower();
-                query = query.Where(c => c.LastName.ToLower().Contains(lastNameLower));
-            }
-
-            if (!string.IsNullOrWhiteSpace(request.Email))
-            {
-                var emailLower = request.Email.ToLower();
-                query = query.Where(c => c.Email.ToLower().Contains(emailLower));
-            }
-
-            if (!string.IsNullOrWhiteSpace(request.PhoneNumber))
-            {
-                query = query.Where(c => c.PhoneNumber != null && c.PhoneNumber.Contains(request.PhoneNumber));
-            }
-
-            if (request.CustomerType.HasValue)
-            {
-                query = query.Where(c => c.CustomerType == request.CustomerType.Value);
-            }
-
-            // Get total count before pagination
-            var totalCount = await query.CountAsync(cancellationToken);
-
-            // Apply sorting
-            query = ApplySorting(query, request.SortBy, request.SortDirection);
-
-            // Apply pagination
-            var skip = (request.PageNumber - 1) * request.PageSize;
-            var items = await query
-                .Skip(skip)
-                .Take(request.PageSize)
-                .ToListAsync(cancellationToken);
-
-            // Calculate total pages
-            var totalPages = (int)Math.Ceiling(totalCount / (double)request.PageSize);
-
-            _logger.LogInformation("Found {TotalCount} customers matching search criteria, returning page {PageNumber} of {TotalPages}",
-                totalCount, request.PageNumber, totalPages);
-
-            return new PagedResult<CustomerEntity>
-            {
-                Items = items,
-                PageNumber = request.PageNumber,
-                PageSize = request.PageSize,
-                TotalCount = totalCount,
-                TotalPages = totalPages
-            };
+            var firstNameLower = request.FirstName.ToLower();
+            query = query.Where(c => c.FirstName.ToLower().Contains(firstNameLower));
         }
-        catch (Exception ex)
+
+        if (!string.IsNullOrWhiteSpace(request.LastName))
         {
-            _logger.LogError(ex, "Error searching customers");
-            throw;
+            var lastNameLower = request.LastName.ToLower();
+            query = query.Where(c => c.LastName.ToLower().Contains(lastNameLower));
         }
+
+        if (!string.IsNullOrWhiteSpace(request.Email))
+        {
+            var emailLower = request.Email.ToLower();
+            query = query.Where(c => c.Email.ToLower().Contains(emailLower));
+        }
+
+        if (!string.IsNullOrWhiteSpace(request.PhoneNumber))
+        {
+            query = query.Where(c => c.PhoneNumber != null && c.PhoneNumber.Contains(request.PhoneNumber));
+        }
+
+        if (request.CustomerType.HasValue)
+        {
+            query = query.Where(c => c.CustomerType == request.CustomerType.Value);
+        }
+
+        // Get total count before pagination
+        var totalCount = await query.CountAsync(cancellationToken);
+
+        // Apply sorting
+        query = ApplySorting(query, request.SortBy, request.SortDirection);
+
+        // Apply pagination
+        var skip = (request.PageNumber - 1) * request.PageSize;
+        var items = await query
+            .Skip(skip)
+            .Take(request.PageSize)
+            .ToListAsync(cancellationToken);
+
+        // Calculate total pages
+        var totalPages = (int)Math.Ceiling(totalCount / (double)request.PageSize);
+
+        _logger.LogInformation("Found {TotalCount} customers matching search criteria, returning page {PageNumber} of {TotalPages}",
+            totalCount, request.PageNumber, totalPages);
+
+        return new PagedResult<CustomerEntity>
+        {
+            Items = items,
+            PageNumber = request.PageNumber,
+            PageSize = request.PageSize,
+            TotalCount = totalCount,
+            TotalPages = totalPages
+        };
     }
 
     private static IQueryable<CustomerEntity> ApplySorting(IQueryable<CustomerEntity> query, string? sortBy, string sortDirection)
@@ -277,24 +222,16 @@ public class CustomerRepository : ICustomerRepository
     {
         _logger.LogInformation("Getting orders for customer: {CustomerId}", customerId);
 
-        try
-        {
-            var orders = await _context.Orders
-                .AsNoTracking()
-                .Include(o => o.OrderItems)
-                    .ThenInclude(oi => oi.Product)
-                .Where(o => o.CustomerId == customerId)
-                .OrderByDescending(o => o.OrderDate)
-                .ToListAsync(cancellationToken);
+        var orders = await _context.Orders
+            .AsNoTracking()
+            .Include(o => o.OrderItems)
+                .ThenInclude(oi => oi.Product)
+            .Where(o => o.CustomerId == customerId)
+            .OrderByDescending(o => o.OrderDate)
+            .ToListAsync(cancellationToken);
 
-            _logger.LogInformation("Retrieved {Count} orders for customer: {CustomerId}", orders.Count, customerId);
-            return orders;
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error getting orders for customer: {CustomerId}", customerId);
-            throw;
-        }
+        _logger.LogInformation("Retrieved {Count} orders for customer: {CustomerId}", orders.Count, customerId);
+        return orders;
     }
 }
 
