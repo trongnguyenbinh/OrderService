@@ -89,23 +89,23 @@ public class OrderService : IOrderService
         };
     }
 
-    private string GenerateOrderNumber()
+    private static string GenerateOrderNumber()
     {
         var timestamp = DateTime.UtcNow.ToString("yyyyMMddHHmmss");
         var random = new Random().Next(1000, 9999);
         return $"ORD-{timestamp}-{random}";
     }
 
-    private void ValidateCreateOrderRequest(CreateOrderRequest request)
+    private static void ValidateCreateOrderRequest(CreateOrderRequest request)
     {
         if (request.CustomerId == Guid.Empty)
         {
-            throw new ArgumentException("CustomerId is required", nameof(request.CustomerId));
+            throw new ArgumentException("CustomerId is required", nameof(request));
         }
 
         if (request.OrderItems == null || !request.OrderItems.Any())
         {
-            throw new ArgumentException("Order must contain at least one item", nameof(request.OrderItems));
+            throw new ArgumentException("Order must contain at least one item", nameof(request));
         }
 
         foreach (var item in request.OrderItems)

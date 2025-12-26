@@ -15,7 +15,7 @@ public class OpenAIService : IOpenAIService
     public OpenAIService(IConfiguration configuration, ILogger<OpenAIService> logger)
     {
         _logger = logger;
-        
+
         var apiKey = configuration["OpenAI:ApiKey"];
         if (string.IsNullOrWhiteSpace(apiKey))
         {
@@ -25,7 +25,7 @@ public class OpenAIService : IOpenAIService
 
         _modelName = configuration["OpenAI:Model"] ?? "gpt-4o-mini";
         _openAIClient = new OpenAIClient(apiKey);
-        
+
         _logger.LogInformation("OpenAI service initialized with model: {Model}", _modelName);
     }
 
@@ -35,31 +35,23 @@ public class OpenAIService : IOpenAIService
         CancellationToken cancellationToken = default)
     {
         _logger.LogInformation("Requesting chat completion with {MessageCount} messages", messages.Count);
-        
-        try
+
+        var chatOptions = options ?? new ChatCompletionOptions
         {
-            var chatOptions = options ?? new ChatCompletionOptions
-            {
-                Temperature = 0.7f,
-                MaxOutputTokenCount = 1000
-            };
+            Temperature = 0.7f,
+            MaxOutputTokenCount = 1000
+        };
 
-            var chatClient = _openAIClient.GetChatClient(_modelName);
-            var completion = await chatClient.CompleteChatAsync(messages, chatOptions, cancellationToken);
+        var chatClient = _openAIClient.GetChatClient(_modelName);
+        var completion = await chatClient.CompleteChatAsync(messages, chatOptions, cancellationToken);
 
-            _logger.LogInformation(
-                "Chat completion successful. Tokens - Prompt: {PromptTokens}, Completion: {CompletionTokens}, Total: {TotalTokens}",
-                completion.Value.Usage.InputTokenCount,
-                completion.Value.Usage.OutputTokenCount,
-                completion.Value.Usage.TotalTokenCount);
+        _logger.LogInformation(
+            "Chat completion successful. Tokens - Prompt: {PromptTokens}, Completion: {CompletionTokens}, Total: {TotalTokens}",
+            completion.Value.Usage.InputTokenCount,
+            completion.Value.Usage.OutputTokenCount,
+            completion.Value.Usage.TotalTokenCount);
 
-            return completion.Value;
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error getting chat completion from OpenAI");
-            throw;
-        }
+        return completion.Value;
     }
 
     public async Task<ChatCompletion> GetChatCompletionWithToolsAsync(
@@ -70,37 +62,29 @@ public class OpenAIService : IOpenAIService
     {
         _logger.LogInformation("Requesting chat completion with tools. Messages: {MessageCount}, Tools: {ToolCount}",
             messages.Count, tools.Count());
-        
-        try
+
+        var chatOptions = options ?? new ChatCompletionOptions
         {
-            var chatOptions = options ?? new ChatCompletionOptions
-            {
-                Temperature = 0.7f,
-                MaxOutputTokenCount = 1000
-            };
+            Temperature = 0.7f,
+            MaxOutputTokenCount = 1000
+        };
 
-            // Add tools to options
-            foreach (var tool in tools)
-            {
-                chatOptions.Tools.Add(tool);
-            }
-
-            var chatClient = _openAIClient.GetChatClient(_modelName);
-            var completion = await chatClient.CompleteChatAsync(messages, chatOptions, cancellationToken);
-
-            _logger.LogInformation(
-                "Chat completion with tools successful. Tokens - Prompt: {PromptTokens}, Completion: {CompletionTokens}, Total: {TotalTokens}",
-                completion.Value.Usage.InputTokenCount,
-                completion.Value.Usage.OutputTokenCount,
-                completion.Value.Usage.TotalTokenCount);
-
-            return completion.Value;
-        }
-        catch (Exception ex)
+        // Add tools to options
+        foreach (var tool in tools)
         {
-            _logger.LogError(ex, "Error getting chat completion with tools from OpenAI");
-            throw;
+            chatOptions.Tools.Add(tool);
         }
+
+        var chatClient = _openAIClient.GetChatClient(_modelName);
+        var completion = await chatClient.CompleteChatAsync(messages, chatOptions, cancellationToken);
+
+        _logger.LogInformation(
+            "Chat completion with tools successful. Tokens - Prompt: {PromptTokens}, Completion: {CompletionTokens}, Total: {TotalTokens}",
+            completion.Value.Usage.InputTokenCount,
+            completion.Value.Usage.OutputTokenCount,
+            completion.Value.Usage.TotalTokenCount);
+
+        return completion.Value;
     }
 }
 

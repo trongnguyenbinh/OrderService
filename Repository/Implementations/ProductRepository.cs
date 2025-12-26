@@ -22,157 +22,109 @@ public class ProductRepository : IProductRepository
     public async Task<ProductEntity?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
     {
         _logger.LogInformation("Getting product by ID: {ProductId}", id);
-        
-        try
+
+        var product = await _context.Products
+            .AsNoTracking()
+            .FirstOrDefaultAsync(p => p.Id == id, cancellationToken);
+
+        if (product == null)
         {
-            var product = await _context.Products
-                .AsNoTracking()
-                .FirstOrDefaultAsync(p => p.Id == id, cancellationToken);
-            
-            if (product == null)
-            {
-                _logger.LogWarning("Product not found with ID: {ProductId}", id);
-            }
-            
-            return product;
+            _logger.LogWarning("Product not found with ID: {ProductId}", id);
         }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error getting product by ID: {ProductId}", id);
-            throw;
-        }
+
+        return product;
     }
 
     public async Task<IEnumerable<ProductEntity>> GetAllAsync(CancellationToken cancellationToken = default)
     {
         _logger.LogInformation("Getting all products");
-        
-        try
-        {
-            var products = await _context.Products
-                .AsNoTracking()
-                .OrderByDescending(p => p.CreatedAt)
-                .ToListAsync(cancellationToken);
-            
-            _logger.LogInformation("Retrieved {Count} products", products.Count);
-            return products;
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error getting all products");
-            throw;
-        }
+
+        var products = await _context.Products
+            .AsNoTracking()
+            .OrderByDescending(p => p.CreatedAt)
+            .ToListAsync(cancellationToken);
+
+        _logger.LogInformation("Retrieved {Count} products", products.Count);
+        return products;
     }
 
     public async Task<ProductEntity> AddAsync(ProductEntity entity, CancellationToken cancellationToken = default)
     {
         _logger.LogInformation("Adding new product with SKU: {SKU}", entity.SKU);
-        
-        try
-        {
-            entity.Id = Guid.NewGuid();
-            entity.CreatedAt = DateTime.UtcNow;
-            entity.UpdatedAt = DateTime.UtcNow;
-            
-            await _context.Products.AddAsync(entity, cancellationToken);
-            await _context.SaveChangesAsync(cancellationToken);
-            
-            _logger.LogInformation("Successfully added product with ID: {ProductId}", entity.Id);
-            return entity;
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error adding product with SKU: {SKU}", entity.SKU);
-            throw;
-        }
+
+        entity.Id = Guid.NewGuid();
+        entity.CreatedAt = DateTime.UtcNow;
+        entity.UpdatedAt = DateTime.UtcNow;
+
+        await _context.Products.AddAsync(entity, cancellationToken);
+        await _context.SaveChangesAsync(cancellationToken);
+
+        _logger.LogInformation("Successfully added product with ID: {ProductId}", entity.Id);
+        return entity;
     }
 
     public async Task<ProductEntity> UpdateAsync(ProductEntity entity, CancellationToken cancellationToken = default)
     {
         _logger.LogInformation("Updating product with ID: {ProductId}", entity.Id);
-        
-        try
+
+        var existingProduct = await _context.Products.FindAsync(new object[] { entity.Id }, cancellationToken);
+
+        if (existingProduct == null)
         {
-            var existingProduct = await _context.Products.FindAsync(new object[] { entity.Id }, cancellationToken);
-            
-            if (existingProduct == null)
-            {
-                _logger.LogWarning("Product not found for update with ID: {ProductId}", entity.Id);
-                throw new KeyNotFoundException($"Product with ID {entity.Id} not found");
-            }
-            
-            existingProduct.Name = entity.Name;
-            existingProduct.Description = entity.Description;
-            existingProduct.SKU = entity.SKU;
-            existingProduct.Price = entity.Price;
-            existingProduct.StockQuantity = entity.StockQuantity;
-            existingProduct.Category = entity.Category;
-            existingProduct.IsActive = entity.IsActive;
-            existingProduct.UpdatedAt = DateTime.UtcNow;
-            
-            await _context.SaveChangesAsync(cancellationToken);
-            
-            _logger.LogInformation("Successfully updated product with ID: {ProductId}", entity.Id);
-            return existingProduct;
+            _logger.LogWarning("Product not found for update with ID: {ProductId}", entity.Id);
+            throw new KeyNotFoundException($"Product with ID {entity.Id} not found");
         }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error updating product with ID: {ProductId}", entity.Id);
-            throw;
-        }
+
+        existingProduct.Name = entity.Name;
+        existingProduct.Description = entity.Description;
+        existingProduct.SKU = entity.SKU;
+        existingProduct.Price = entity.Price;
+        existingProduct.StockQuantity = entity.StockQuantity;
+        existingProduct.Category = entity.Category;
+        existingProduct.IsActive = entity.IsActive;
+        existingProduct.UpdatedAt = DateTime.UtcNow;
+
+        await _context.SaveChangesAsync(cancellationToken);
+
+        _logger.LogInformation("Successfully updated product with ID: {ProductId}", entity.Id);
+        return existingProduct;
     }
 
     public async Task<bool> DeleteAsync(Guid id, CancellationToken cancellationToken = default)
     {
         _logger.LogInformation("Deleting product with ID: {ProductId}", id);
-        
-        try
+
+        var product = await _context.Products.FindAsync(new object[] { id }, cancellationToken);
+
+        if (product == null)
         {
-            var product = await _context.Products.FindAsync(new object[] { id }, cancellationToken);
-            
-            if (product == null)
-            {
-                _logger.LogWarning("Product not found for deletion with ID: {ProductId}", id);
-                return false;
-            }
-            
-            // Soft delete by setting IsActive to false
-            product.IsActive = false;
-            product.UpdatedAt = DateTime.UtcNow;
-            await _context.SaveChangesAsync(cancellationToken);
-            
-            _logger.LogInformation("Successfully soft deleted product with ID: {ProductId}", id);
-            return true;
+            _logger.LogWarning("Product not found for deletion with ID: {ProductId}", id);
+            return false;
         }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error deleting product with ID: {ProductId}", id);
-            throw;
-        }
+
+        // Soft delete by setting IsActive to false
+        product.IsActive = false;
+        product.UpdatedAt = DateTime.UtcNow;
+        await _context.SaveChangesAsync(cancellationToken);
+
+        _logger.LogInformation("Successfully soft deleted product with ID: {ProductId}", id);
+        return true;
     }
 
     public async Task<ProductEntity?> GetBySkuAsync(string sku, CancellationToken cancellationToken = default)
     {
         _logger.LogInformation("Getting product by SKU: {SKU}", sku);
 
-        try
-        {
-            var product = await _context.Products
-                .AsNoTracking()
-                .FirstOrDefaultAsync(p => p.SKU == sku, cancellationToken);
+        var product = await _context.Products
+            .AsNoTracking()
+            .FirstOrDefaultAsync(p => p.SKU == sku, cancellationToken);
 
-            if (product == null)
-            {
-                _logger.LogWarning("Product not found with SKU: {SKU}", sku);
-            }
-
-            return product;
-        }
-        catch (Exception ex)
+        if (product == null)
         {
-            _logger.LogError(ex, "Error getting product by SKU: {SKU}", sku);
-            throw;
+            _logger.LogWarning("Product not found with SKU: {SKU}", sku);
         }
+
+        return product;
     }
 
     public async Task<PagedResult<ProductEntity>> SearchForAIToolAsync(ProductSearchRequest request, CancellationToken cancellationToken = default)
@@ -181,57 +133,49 @@ public class ProductRepository : IProductRepository
             "Searching products for AI tool - Name: {Name}, Description: {Description}, SKU: {SKU}, Category: {Category}, Page: {PageNumber}, PageSize: {PageSize}",
             request.Name, request.Description, request.SKU, request.Category, request.PageNumber, request.PageSize);
 
-        try
+        // Start with base query - filter by IsActive = true
+        var query = _context.Products
+            .AsNoTracking()
+            .Where(p => p.IsActive);
+
+        var hasNameFilter = !string.IsNullOrWhiteSpace(request.Name);
+        var hasDescriptionFilter = !string.IsNullOrWhiteSpace(request.Description);
+        var hasCategoryFilter = !string.IsNullOrWhiteSpace(request.Category);
+
+        // Only apply OR filter if at least one search parameter is provided
+        if (hasNameFilter || hasDescriptionFilter || hasCategoryFilter)
         {
-            // Start with base query - filter by IsActive = true
-            var query = _context.Products
-                .AsNoTracking()
-                .Where(p => p.IsActive == true);
-
-            var hasNameFilter = !string.IsNullOrWhiteSpace(request.Name);
-            var hasDescriptionFilter = !string.IsNullOrWhiteSpace(request.Description);
-            var hasCategoryFilter = !string.IsNullOrWhiteSpace(request.Category);
-
-            // Only apply OR filter if at least one search parameter is provided
-            if (hasNameFilter || hasDescriptionFilter || hasCategoryFilter)
-            {
-                query = query.Where(p =>
-                    (hasNameFilter && p.Name.ToLower().Contains(request.Name!.ToLower())) ||
-                    (hasDescriptionFilter && p.Description != null && p.Description.ToLower().Contains(request.Description!.ToLower())) ||
-                    (hasCategoryFilter && p.Category == request.Category)
-                );
-            }
-
-            // Get total count before pagination
-            var totalCount = await query.CountAsync(cancellationToken);
-
-            // Apply pagination
-            var skip = (request.PageNumber - 1) * request.PageSize;
-            var items = await query
-                .Skip(skip)
-                .Take(request.PageSize)
-                .ToListAsync(cancellationToken);
-
-            // Calculate total pages
-            var totalPages = (int)Math.Ceiling(totalCount / (double)request.PageSize);
-
-            _logger.LogInformation("Found {TotalCount} products matching search criteria, returning page {PageNumber} of {TotalPages}",
-                totalCount, request.PageNumber, totalPages);
-
-            return new PagedResult<ProductEntity>
-            {
-                Items = items,
-                PageNumber = request.PageNumber,
-                PageSize = request.PageSize,
-                TotalCount = totalCount,
-                TotalPages = totalPages
-            };
+            query = query.Where(p =>
+                (hasNameFilter && p.Name.ToLower().Contains(request.Name!.ToLower())) ||
+                (hasDescriptionFilter && p.Description != null && p.Description.ToLower().Contains(request.Description!.ToLower())) ||
+                (hasCategoryFilter && p.Category == request.Category)
+            );
         }
-        catch (Exception ex)
+
+        // Get total count before pagination
+        var totalCount = await query.CountAsync(cancellationToken);
+
+        // Apply pagination
+        var skip = (request.PageNumber - 1) * request.PageSize;
+        var items = await query
+            .Skip(skip)
+            .Take(request.PageSize)
+            .ToListAsync(cancellationToken);
+
+        // Calculate total pages
+        var totalPages = (int)Math.Ceiling(totalCount / (double)request.PageSize);
+
+        _logger.LogInformation("Found {TotalCount} products matching search criteria, returning page {PageNumber} of {TotalPages}",
+            totalCount, request.PageNumber, totalPages);
+
+        return new PagedResult<ProductEntity>
         {
-            _logger.LogError(ex, "Error searching products for AI tool");
-            throw;
-        }
+            Items = items,
+            PageNumber = request.PageNumber,
+            PageSize = request.PageSize,
+            TotalCount = totalCount,
+            TotalPages = totalPages
+        };
     }
 
     public async Task<PagedResult<ProductEntity>> SearchAsync(ProductSearchRequest request, CancellationToken cancellationToken = default)
@@ -240,72 +184,64 @@ public class ProductRepository : IProductRepository
             "Searching products - Name: {Name}, Description: {Description}, SKU: {SKU}, Category: {Category}, Page: {PageNumber}, PageSize: {PageSize}, SortBy: {SortBy}, SortDirection: {SortDirection}",
             request.Name, request.Description, request.SKU, request.Category, request.PageNumber, request.PageSize, request.SortBy, request.SortDirection);
 
-        try
+        // Start with base query - filter by IsActive = true
+        var query = _context.Products
+            .AsNoTracking()
+            .Where(p => p.IsActive);
+
+        // Apply search filters
+        if (!string.IsNullOrWhiteSpace(request.Name))
         {
-            // Start with base query - filter by IsActive = true
-            var query = _context.Products
-                .AsNoTracking()
-                .Where(p => p.IsActive == true);
-
-            // Apply search filters
-            if (!string.IsNullOrWhiteSpace(request.Name))
-            {
-                var nameLower = request.Name.ToLower();
-                query = query.Where(p => p.Name.ToLower().Contains(nameLower));
-            }
-
-            if (!string.IsNullOrWhiteSpace(request.Description))
-            {
-                var descriptionLower = request.Description.ToLower();
-                query = query.Where(p => p.Description != null && p.Description.ToLower().Contains(descriptionLower));
-            }
-
-            if (!string.IsNullOrWhiteSpace(request.SKU))
-            {
-                var skuLower = request.SKU.ToLower();
-                query = query.Where(p => p.SKU.ToLower().Contains(skuLower));
-            }
-
-            if (!string.IsNullOrWhiteSpace(request.Category))
-            {
-                query = query.Where(p => p.Category == request.Category);
-            }
-
-            // Get total count before pagination
-            var totalCount = await query.CountAsync(cancellationToken);
-
-            // Apply sorting
-            query = ApplySorting(query, request.SortBy, request.SortDirection);
-
-            // Apply pagination
-            var skip = (request.PageNumber - 1) * request.PageSize;
-            string sql = query.ToQueryString();
-            Console.WriteLine(sql);
-            var items = await query
-                .Skip(skip)
-                .Take(request.PageSize)
-                .ToListAsync(cancellationToken);
-
-            // Calculate total pages
-            var totalPages = (int)Math.Ceiling(totalCount / (double)request.PageSize);
-
-            _logger.LogInformation("Found {TotalCount} products matching search criteria, returning page {PageNumber} of {TotalPages}",
-                totalCount, request.PageNumber, totalPages);
-
-            return new PagedResult<ProductEntity>
-            {
-                Items = items,
-                PageNumber = request.PageNumber,
-                PageSize = request.PageSize,
-                TotalCount = totalCount,
-                TotalPages = totalPages
-            };
+            var nameLower = request.Name.ToLower();
+            query = query.Where(p => p.Name.ToLower().Contains(nameLower));
         }
-        catch (Exception ex)
+
+        if (!string.IsNullOrWhiteSpace(request.Description))
         {
-            _logger.LogError(ex, "Error searching products");
-            throw;
+            var descriptionLower = request.Description.ToLower();
+            query = query.Where(p => p.Description != null && p.Description.ToLower().Contains(descriptionLower));
         }
+
+        if (!string.IsNullOrWhiteSpace(request.SKU))
+        {
+            var skuLower = request.SKU.ToLower();
+            query = query.Where(p => p.SKU.ToLower().Contains(skuLower));
+        }
+
+        if (!string.IsNullOrWhiteSpace(request.Category))
+        {
+            query = query.Where(p => p.Category == request.Category);
+        }
+
+        // Get total count before pagination
+        var totalCount = await query.CountAsync(cancellationToken);
+
+        // Apply sorting
+        query = ApplySorting(query, request.SortBy, request.SortDirection);
+
+        // Apply pagination
+        var skip = (request.PageNumber - 1) * request.PageSize;
+        string sql = query.ToQueryString();
+        Console.WriteLine(sql);
+        var items = await query
+            .Skip(skip)
+            .Take(request.PageSize)
+            .ToListAsync(cancellationToken);
+
+        // Calculate total pages
+        var totalPages = (int)Math.Ceiling(totalCount / (double)request.PageSize);
+
+        _logger.LogInformation("Found {TotalCount} products matching search criteria, returning page {PageNumber} of {TotalPages}",
+            totalCount, request.PageNumber, totalPages);
+
+        return new PagedResult<ProductEntity>
+        {
+            Items = items,
+            PageNumber = request.PageNumber,
+            PageSize = request.PageSize,
+            TotalCount = totalCount,
+            TotalPages = totalPages
+        };
     }
 
     private static IQueryable<ProductEntity> ApplySorting(IQueryable<ProductEntity> query, string? sortBy, string sortDirection)
@@ -329,24 +265,16 @@ public class ProductRepository : IProductRepository
         var productIdList = productIds.ToList();
         _logger.LogInformation("Getting {Count} products by IDs in bulk", productIdList.Count);
 
-        try
-        {
-            var products = await _context.Products
-                .Where(p => productIdList.Contains(p.Id))
-                .ToListAsync(cancellationToken);
+        var products = await _context.Products
+            .Where(p => productIdList.Contains(p.Id))
+            .ToListAsync(cancellationToken);
 
-            var productDictionary = products.ToDictionary(p => p.Id);
+        var productDictionary = products.ToDictionary(p => p.Id);
 
-            _logger.LogInformation("Retrieved {Count} products out of {RequestedCount} requested",
-                productDictionary.Count, productIdList.Count);
+        _logger.LogInformation("Retrieved {Count} products out of {RequestedCount} requested",
+            productDictionary.Count, productIdList.Count);
 
-            return productDictionary;
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error getting products by IDs in bulk");
-            throw;
-        }
+        return productDictionary;
     }
 
     public async Task UpdateRangeAsync(IEnumerable<ProductEntity> products, CancellationToken cancellationToken = default)
@@ -354,18 +282,10 @@ public class ProductRepository : IProductRepository
         var productList = products.ToList();
         _logger.LogInformation("Updating {Count} products in bulk", productList.Count);
 
-        try
-        {
-            _context.Products.UpdateRange(productList);
-            await _context.SaveChangesAsync(cancellationToken);
+        _context.Products.UpdateRange(productList);
+        await _context.SaveChangesAsync(cancellationToken);
 
-            _logger.LogInformation("Successfully updated {Count} products in bulk", productList.Count);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error updating products in bulk");
-            throw;
-        }
+        _logger.LogInformation("Successfully updated {Count} products in bulk", productList.Count);
     }
 }
 
