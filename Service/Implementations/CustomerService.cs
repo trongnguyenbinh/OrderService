@@ -181,31 +181,31 @@ public class CustomerService : ICustomerService
         if (string.IsNullOrWhiteSpace(request.FirstName))
         {
             _logger.LogWarning("Service: Validation failed - Customer first name is required");
-            throw new ArgumentException("Customer first name is required", nameof(request.FirstName));
+            throw new ArgumentException("Customer first name is required", nameof(request));
         }
 
         if (string.IsNullOrWhiteSpace(request.LastName))
         {
             _logger.LogWarning("Service: Validation failed - Customer last name is required");
-            throw new ArgumentException("Customer last name is required", nameof(request.LastName));
+            throw new ArgumentException("Customer last name is required", nameof(request));
         }
 
         if (string.IsNullOrWhiteSpace(request.Email))
         {
             _logger.LogWarning("Service: Validation failed - Customer email is required");
-            throw new ArgumentException("Customer email is required", nameof(request.Email));
+            throw new ArgumentException("Customer email is required", nameof(request));
         }
 
         if (!IsValidEmail(request.Email))
         {
             _logger.LogWarning("Service: Validation failed - Invalid email format: {Email}", request.Email);
-            throw new ArgumentException("Invalid email format", nameof(request.Email));
+            throw new ArgumentException("Invalid email format", nameof(request));
         }
 
         if (!string.IsNullOrWhiteSpace(request.PhoneNumber) && !IsValidPhoneNumber(request.PhoneNumber))
         {
             _logger.LogWarning("Service: Validation failed - Invalid phone number format: {PhoneNumber}", request.PhoneNumber);
-            throw new ArgumentException("Invalid phone number format", nameof(request.PhoneNumber));
+            throw new ArgumentException("Invalid phone number format", nameof(request));
         }
     }
 
@@ -214,31 +214,31 @@ public class CustomerService : ICustomerService
         if (string.IsNullOrWhiteSpace(request.FirstName))
         {
             _logger.LogWarning("Service: Validation failed - Customer first name is required");
-            throw new ArgumentException("Customer first name is required", nameof(request.FirstName));
+            throw new ArgumentException("Customer first name is required", nameof(request));
         }
 
         if (string.IsNullOrWhiteSpace(request.LastName))
         {
             _logger.LogWarning("Service: Validation failed - Customer last name is required");
-            throw new ArgumentException("Customer last name is required", nameof(request.LastName));
+            throw new ArgumentException("Customer last name is required", nameof(request));
         }
 
         if (string.IsNullOrWhiteSpace(request.Email))
         {
             _logger.LogWarning("Service: Validation failed - Customer email is required");
-            throw new ArgumentException("Customer email is required", nameof(request.Email));
+            throw new ArgumentException("Customer email is required", nameof(request));
         }
 
         if (!IsValidEmail(request.Email))
         {
             _logger.LogWarning("Service: Validation failed - Invalid email format: {Email}", request.Email);
-            throw new ArgumentException("Invalid email format", nameof(request.Email));
+            throw new ArgumentException("Invalid email format", nameof(request));
         }
 
         if (!string.IsNullOrWhiteSpace(request.PhoneNumber) && !IsValidPhoneNumber(request.PhoneNumber))
         {
             _logger.LogWarning("Service: Validation failed - Invalid phone number format: {PhoneNumber}", request.PhoneNumber);
-            throw new ArgumentException("Invalid phone number format", nameof(request.PhoneNumber));
+            throw new ArgumentException("Invalid phone number format", nameof(request));
         }
     }
 
@@ -249,19 +249,19 @@ public class CustomerService : ICustomerService
         if (request.PageNumber < 1)
         {
             _logger.LogWarning("Service: Validation failed - Page number must be greater than or equal to 1");
-            throw new ArgumentException("Page number must be greater than or equal to 1", nameof(request.PageNumber));
+            throw new ArgumentException("Page number must be greater than or equal to 1", nameof(request));
         }
 
         if (request.PageSize < 1)
         {
             _logger.LogWarning("Service: Validation failed - Page size must be greater than 0");
-            throw new ArgumentException("Page size must be greater than 0", nameof(request.PageSize));
+            throw new ArgumentException("Page size must be greater than 0", nameof(request));
         }
 
         if (request.PageSize > maxPageSize)
         {
             _logger.LogWarning("Service: Validation failed - Page size cannot exceed {MaxPageSize}", maxPageSize);
-            throw new ArgumentException($"Page size cannot exceed {maxPageSize}", nameof(request.PageSize));
+            throw new ArgumentException($"Page size cannot exceed {maxPageSize}", nameof(request));
         }
 
         // Validate sort direction
@@ -270,7 +270,7 @@ public class CustomerService : ICustomerService
             request.SortDirection.ToLower() != "desc")
         {
             _logger.LogWarning("Service: Validation failed - Sort direction must be 'asc' or 'desc'");
-            throw new ArgumentException("Sort direction must be 'asc' or 'desc'", nameof(request.SortDirection));
+            throw new ArgumentException("Sort direction must be 'asc' or 'desc'", nameof(request));
         }
 
         // Validate sort field
@@ -280,7 +280,7 @@ public class CustomerService : ICustomerService
             if (!validSortFields.Contains(request.SortBy.ToLower()))
             {
                 _logger.LogWarning("Service: Validation failed - Invalid sort field: {SortBy}", request.SortBy);
-                throw new ArgumentException("Sort by must be either 'FirstName', 'LastName', 'Email', or 'CustomerType'", nameof(request.SortBy));
+                throw new ArgumentException("Sort by must be either 'FirstName', 'LastName', 'Email', or 'CustomerType'", nameof(request));
             }
         }
     }
