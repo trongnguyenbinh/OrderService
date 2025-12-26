@@ -3,6 +3,7 @@ using LegacyOrder.ModuleRegistrations;
 
 var builder = WebApplication.CreateBuilder(args);
 
+
 // Configure Serilog
 builder.AddSerilogLogging(builder.Configuration);
 
@@ -27,9 +28,7 @@ services.AddAutoMapper(typeof(Program));
 services.AddSwaggerGen();
 
 #endregion
-
-var app = builder.Build();
-
+await using var app = builder.Build();
 // Register global exception handling middleware (should be early in the pipeline)
 app.UseGlobalExceptionHandling();
 
@@ -54,7 +53,7 @@ app.MapGet("/api/health", HealthCheck)
     .WithName("HealthCheck")
     .WithDescription("Health check endpoint for the Order Service API");
 
-app.Run();
+await app.RunAsync();
 
 static IResult HealthCheck()
 {
