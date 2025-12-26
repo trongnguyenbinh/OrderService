@@ -15,7 +15,7 @@ builder.Configuration.LoadSecretsFromVault();
 var connectionString = builder.Configuration.GetConnectionString("Default");
 if (string.IsNullOrWhiteSpace(connectionString))
 {
-    throw new Exception("Connection string is not configured.");
+    throw new InvalidOperationException("Connection string is not configured.");
 }
 
 services.AddRepositoryCollection(connectionString);
